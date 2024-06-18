@@ -1,4 +1,4 @@
-class Program
+`class Program
 {
     /*
      * 
@@ -18,7 +18,7 @@ class Program
         // Replace with the actual COM port used by the Lane 3000 terminal
         string portName = "COM7";
         int baudRate = 115200;
-
+`
         try
         {
             using (SerialPort serialPort = new SerialPort(portName, baudRate))
