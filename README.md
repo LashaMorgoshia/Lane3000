@@ -1,6 +1,4 @@
-class Program
-{
-    /*
+ /*
      * 
      * START_TRANSACTION
      * CANCEL_TRANSACTION
@@ -13,6 +11,10 @@ class Program
      * SET_CONFIGURATION
      * 
      */
+
+class Program
+{
+   
     static void Main(string[] args)
     {
         // Replace with the actual COM port used by the Lane 3000 terminal
