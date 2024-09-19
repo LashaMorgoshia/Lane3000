@@ -1,17 +1,12 @@
 
-
     // პარამეტრები
     var baseUrl = "https://your-terminal-url";
 
-
     var licenseToken = "your-license-token";
-
 
     var alias = "POS1";
 
-
     var userName = "your-username";
-
 
     var password = "your-password";
 
