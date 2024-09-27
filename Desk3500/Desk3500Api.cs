@@ -9,7 +9,9 @@
 using System;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Desk3500
 {
@@ -69,8 +71,13 @@ namespace Desk3500
             var response = await SendPostRequest(url, requestJson);
             var result = await response.Content.ReadAsStringAsync();
             Console.WriteLine("POS Connection Opened: " + result);
-            // Parse and store accessToken from the response
-            accessToken = "extracted-access-token"; // Update this based on response parsing
+            using (JsonDocument doc = JsonDocument.Parse(result))
+            {
+                // Extract the access token
+                accessToken = doc.RootElement.GetProperty("accessToken").GetString();
+                Console.WriteLine("Access Token: " + accessToken);
+            }
+            // accessToken = "extracted-access-token"; // Update this based on response parsing
         }
 
         public async Task ClosePos()
@@ -86,22 +93,45 @@ namespace Desk3500
             Console.WriteLine("POS Connection Closed: " + result);
         }
 
+        public static string CreateJson(int amount, string currencyCode, string documentNr, string panL4Digit)
+        {
+            var request = new Request
+            {
+                header = new Header
+                {
+                    command = "AUTHORIZE"
+                },
+                @params = new Params
+                {
+                    amount = amount,
+                    cashBackAmount = 0,
+                    currencyCode = currencyCode,
+                    documentNr = documentNr,
+                    panL4Digit = panL4Digit
+                }
+            };
+
+            return JsonConvert.SerializeObject(request, Formatting.None);
+        }
+
         public async Task AuthorizePayment(int amount, string documentNr, string currencyCode = "981", string panL4Digit = "")
         {
-            var url = $"{baseUrl}/v105/executeposcmd";
-            var requestJson = $@"
-        {{
-            ""header"": {{
-                ""command"": ""AUTHORIZE""
-            }},
-            ""params"": {{
-                ""amount"": {amount},
-                ""cashBackAmount"": 0,
-                ""currencyCode"": ""{currencyCode}"",
-                ""documentNr"": ""{documentNr}"",
-                ""panL4Digit"": ""{panL4Digit}""
-            }}
-        }}";
+                var url = $"{baseUrl}/v105/executeposcmd";
+            //    var requestJson = $@"
+            //{{
+            //    ""header"": {{
+            //        ""command"": ""AUTHORIZE""
+            //    }},
+            //    ""params"": {{
+            //        ""amount"": {amount},
+            //        ""cashBackAmount"": 0,
+            //        ""currencyCode"": ""{currencyCode}"",
+            //        ""documentNr"": ""{documentNr}"",
+            //        ""panL4Digit"": ""{panL4Digit}""
+            //    }}
+            //}}";
+
+            var requestJson = CreateJson(amount, currencyCode, "DOC123456", "1234");
 
             var response = await SendPostRequest(url, requestJson);
             var result = await response.Content.ReadAsStringAsync();

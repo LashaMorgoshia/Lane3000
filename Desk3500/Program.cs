@@ -8,7 +8,7 @@ namespace Desk3500
         static async Task Main(string[] args)
         {
             // პარამეტრები
-            var baseUrl = "https://your-terminal-url";
+            var baseUrl = "http://localhost:6678";
             var licenseToken = "your-license-token";
             var alias = "POS1";
             var userName = "your-username";
@@ -22,11 +22,17 @@ namespace Desk3500
                 // 1. POS_თან კავშირის დამყარება
                 await desk3500Api.OpenPos();
 
+                Console.WriteLine();
+
                 // 2. გადახდის ავტორიზაცია (თანხა არის თეთრებში. 1000 ნიშნავს 10.00 ლარს)
-                await desk3500Api.AuthorizePayment(1000, "123456");
+                await desk3500Api.AuthorizePayment(1100, "123456");
+
+                Console.WriteLine();
 
                 // 3. სტატუსის გადამოწმება (optional)
                 await desk3500Api.GetTransactionStatus(documentNr: "123456");
+
+                Console.WriteLine();
 
                 // 4. უკან დაბრუნება
                 // await desk3500Api.RefundPayment(1000, "123456", "123456", "933315462707");
@@ -36,6 +42,8 @@ namespace Desk3500
 
                 // 6. კავშირის დასასრული
                 await desk3500Api.ClosePos();
+
+                Console.ReadLine();
             }
             catch (Exception ex)
             {
