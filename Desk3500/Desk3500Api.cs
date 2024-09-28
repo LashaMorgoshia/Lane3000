@@ -80,6 +80,109 @@ namespace Desk3500
             // accessToken = "extracted-access-token"; // Update this based on response parsing
         }
 
+        public async Task WaitForCardEvent()
+        {
+            var url = $"{baseUrl}/v105/getevent";
+
+            while (true)
+            {
+                var response = await SendPostRequest(url, "{}");
+                var result = await response.Content.ReadAsStringAsync();
+                if (!result.Contains("Queue empty."))
+                {
+                    Console.WriteLine("Event Response: " + result);
+                    Console.WriteLine();
+                }
+
+                if (result.Contains("\"eventName\":\"ONCARD\""))
+                {
+                    Console.WriteLine("Card detected! Proceeding to authorization...");
+                    break;
+                }
+                // No need for Task.Delay here if using long polling
+                //break;
+            }
+        }
+
+        public async Task WaitForAuthResponse()
+        {
+            var url = $"{baseUrl}/v105/getevent";
+
+
+            var response = await SendPostRequest(url, "{}");
+            var result = await response.Content.ReadAsStringAsync();
+            if (!result.Contains("Queue empty."))
+            {
+                Console.WriteLine("Event Response: " + result);
+                Console.WriteLine();
+            }
+
+            if (result.Contains("\"eventName\":\"ONCARD\""))
+            {
+                Console.WriteLine("Card detected! Proceeding to authorization...");
+            }
+            // No need for Task.Delay here if using long polling
+            //break;
+
+        }
+
+        public async Task WaitForCardEventResponse()
+        {
+            var url = $"{baseUrl}/v105/getevent";
+
+            while (true)
+            {
+                var response = await SendPostRequest(url, "{}");
+                var result = await response.Content.ReadAsStringAsync();
+                if (!result.Contains("Queue empty."))
+                {
+                    Console.WriteLine("Event Response: " + result);
+                    Console.WriteLine();
+                }
+
+                if (result.Contains("\"eventName\":\"ONCARD\""))
+                {
+                    Console.WriteLine("Status Response ...");
+                    break;
+                }
+                // No need for Task.Delay here if using long polling
+                break;
+            }
+        }
+
+        // Method to unlock the device and wait for the card
+        public async Task UnlockAndWaitForCard(int amount, string ecrVersion)
+        {
+            await UnlockDevice(amount, ecrVersion);
+            await WaitForCardEvent(); // Wait for the card touch
+        }
+
+        // Unlock POS for transactions
+        public async Task<string> UnlockDevice(int amount, string ecrVersion, string currencyCode = "981", string idleText = "Insert Card")
+        {
+            var url = $"{baseUrl}/v105/executeposcmd";
+            var requestJson = $@"
+            {{
+                ""header"": {{
+                    ""command"": ""UNLOCKDEVICE""
+                }},
+                ""params"": {{
+                    ""posOperation"": ""AUTHORIZE"",
+                    ""amount"": {amount},
+                    ""cashBackAmount"": 0,
+                    ""currencyCode"": ""{currencyCode}"",
+                    ""language"": ""GE"",
+                    ""idleText"": ""{idleText}"",
+                    ""ecrVersion"": ""{ecrVersion}""
+                }}
+            }}";
+
+            var response = await SendPostRequest(url, requestJson);
+            var result = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Device Unlocked: " + result);
+            return result;
+        }
+
         public async Task ClosePos()
         {
             var url = $"{baseUrl}/v105/closepos";
@@ -117,21 +220,21 @@ namespace Desk3500
         public async Task AuthorizePayment(int amount, string documentNr, string currencyCode = "981", string panL4Digit = "")
         {
                 var url = $"{baseUrl}/v105/executeposcmd";
-            //    var requestJson = $@"
-            //{{
-            //    ""header"": {{
-            //        ""command"": ""AUTHORIZE""
-            //    }},
-            //    ""params"": {{
-            //        ""amount"": {amount},
-            //        ""cashBackAmount"": 0,
-            //        ""currencyCode"": ""{currencyCode}"",
-            //        ""documentNr"": ""{documentNr}"",
-            //        ""panL4Digit"": ""{panL4Digit}""
-            //    }}
-            //}}";
+            var requestJson = $@"
+            {{
+                ""header"": {{
+                    ""command"": ""AUTHORIZE""
+                }},
+                ""params"": {{
+                    ""amount"": {amount},
+                    ""cashBackAmount"": 0,
+                    ""currencyCode"": ""{currencyCode}"",
+                    ""documentNr"": ""{documentNr}"",
+                    ""panL4Digit"": ""{panL4Digit}""
+                }}
+            }}";
 
-            var requestJson = CreateJson(amount, currencyCode, "DOC123456", "1234");
+            // var requestJson = CreateJson(amount, currencyCode, "DOC123456", "1234");
 
             var response = await SendPostRequest(url, requestJson);
             var result = await response.Content.ReadAsStringAsync();
