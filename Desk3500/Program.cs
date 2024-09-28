@@ -32,14 +32,15 @@ namespace Desk3500
 
                 // 2. გადახდის ავტორიზაცია (თანხა არის თეთრებში. 1000 ნიშნავს 10.00 ლარს)
                 await desk3500Api.AuthorizePayment(100, docNo);
-                
-                await Task.Delay(5000);
 
                 Console.WriteLine();
 
                 // 3. სტატუსის გადამოწმება (optional)
                 await desk3500Api.GetTransactionStatus(documentNr: docNo);
+
                 await desk3500Api.WaitForCardEventResponse();
+
+                await Task.Delay(5000);
 
                 Console.WriteLine();
 

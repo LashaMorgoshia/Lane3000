@@ -12,6 +12,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
 namespace Desk3500
 {
@@ -82,7 +83,7 @@ namespace Desk3500
 
         public async Task WaitForCardEvent()
         {
-            var url = $"{baseUrl}/v105/getevent";
+            var url = $"{baseUrl}/v105/getEvent";
 
             while (true)
             {
@@ -106,29 +107,7 @@ namespace Desk3500
 
         public async Task WaitForAuthResponse()
         {
-            var url = $"{baseUrl}/v105/getevent";
-
-
-            var response = await SendPostRequest(url, "{}");
-            var result = await response.Content.ReadAsStringAsync();
-            if (!result.Contains("Queue empty."))
-            {
-                Console.WriteLine("Event Response: " + result);
-                Console.WriteLine();
-            }
-
-            if (result.Contains("\"eventName\":\"ONCARD\""))
-            {
-                Console.WriteLine("Card detected! Proceeding to authorization...");
-            }
-            // No need for Task.Delay here if using long polling
-            //break;
-
-        }
-
-        public async Task WaitForCardEventResponse()
-        {
-            var url = $"{baseUrl}/v105/getevent";
+            var url = $"{baseUrl}/v105/getEvent?longPollingTimeout=10";
 
             while (true)
             {
@@ -138,16 +117,49 @@ namespace Desk3500
                 {
                     Console.WriteLine("Event Response: " + result);
                     Console.WriteLine();
+                    break;
                 }
 
                 if (result.Contains("\"eventName\":\"ONCARD\""))
                 {
-                    Console.WriteLine("Status Response ...");
-                    break;
+                    Console.WriteLine("Card detected! Proceeding to authorization...");
                 }
                 // No need for Task.Delay here if using long polling
-                break;
+                //break;
             }
+        }
+
+        public async Task<TransactionStatus> WaitForCardEventResponse()
+        {
+            var url = $"{baseUrl}/v105/getEvent";
+            var transactionStatus = new TransactionStatus();
+            while (true)
+            {
+                var response = await SendPostRequest(url, "{}");
+                var result = await response.Content.ReadAsStringAsync();
+                
+
+                if (result.Contains("\"eventName\":\"ONTRNSTATUS\""))
+                {
+                    Console.WriteLine("Event Response: " + result);
+                    Console.WriteLine();
+                    // Parse the JSON
+                    transactionStatus = JsonConvert.DeserializeObject<TransactionStatus>(result);
+                    // Output parsed values
+                    Console.WriteLine($"Event Name: {transactionStatus.EventName}");
+                    Console.WriteLine($"Document Number: {transactionStatus.Properties.DocumentNr}");
+                    Console.WriteLine($"State: {transactionStatus.Properties.State}");
+                    Console.WriteLine($"Result Code: {transactionStatus.Result.ResultCode}");
+                    Console.WriteLine($"Result Message: {transactionStatus.Result.ResultMessage}");
+                    break;
+                }
+
+                // No need for Task.Delay here if using long polling
+                // break;
+               // await Task.Delay(1000);
+            }
+
+            return transactionStatus;
         }
 
         // Method to unlock the device and wait for the card
