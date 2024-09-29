@@ -38,7 +38,14 @@ namespace Desk3500
                 // 3. სტატუსის გადამოწმება (optional)
                 await desk3500Api.GetTransactionStatus(documentNr: docNo);
 
-                await desk3500Api.WaitForCardEventResponse();
+                var tranStatus = await desk3500Api.WaitForCardEventResponse();
+
+                if (tranStatus != null && tranStatus.Properties.State == "Declined")
+                {
+                    Console.WriteLine();
+                    await desk3500Api.CloseDoc(docNo);
+                }
+
 
                 await Task.Delay(5000);
 

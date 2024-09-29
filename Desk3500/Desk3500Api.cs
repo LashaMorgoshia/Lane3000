@@ -195,6 +195,31 @@ namespace Desk3500
             return result;
         }
 
+        public async Task CloseDoc(string docNo)
+        {
+            try
+            {
+                var url = $"{baseUrl}/v105/executeposcmd";
+                var requestJson = $@"
+        {{
+            ""header"": {{
+                ""command"": ""CLOSEDOC""
+            }},
+            ""params"": {{
+                ""documentNr"": ""{docNo}""
+            }}
+        }}";
+
+                var response = await SendPostRequest(url, requestJson);
+                var result = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Close Doc: " + result);
+            }
+            catch(Exception ex) {
+                Console.WriteLine("CloseDoc: " + ex.Message);
+            }
+        }
+
+
         public async Task ClosePos()
         {
             var url = $"{baseUrl}/v105/closepos";
