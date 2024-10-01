@@ -116,7 +116,7 @@ namespace Desk3500
                 {
                     Console.WriteLine("Event Response: " + result);
                     Console.WriteLine();
-                    break;
+                    // break;
                 }
 
                 if (result.Contains("\"eventName\":\"ONCARD\""))
@@ -396,7 +396,10 @@ namespace Desk3500
         {
             var url = $"{baseUrl}/v105/getEvent";
             var transactionStatus = new TransactionStatus();
-            
+
+            while (true)
+            {
+
                 var response = await SendPostRequest(url, "{}");
                 var result = await response.Content.ReadAsStringAsync();
 
@@ -413,14 +416,14 @@ namespace Desk3500
                     Console.WriteLine($"State: {transactionStatus.Properties.State}");
                     Console.WriteLine($"Result Code: {transactionStatus.Result.ResultCode}");
                     Console.WriteLine($"Result Message: {transactionStatus.Result.ResultMessage}");
-                    
+                    break;
                 }
 
                 // No need for Task.Delay here if using long polling
                 // break;
                 // await Task.Delay(1000);
-            
 
+            }
             return transactionStatus;
         }
     }

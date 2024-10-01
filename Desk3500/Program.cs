@@ -14,7 +14,9 @@ namespace Desk3500
             var userName = "your-username";
             var password = "your-password";
 
-            var docNo = $"{DateTime.Now.Year}{DateTime.Now.Month}{DateTime.Now.Day}";
+            // var docNo = $"{DateTime.Now.Date.Ticks}";
+            var docNo = $"{DateTime.Now.Year}{DateTime.Now.Month}{DateTime.Now.Day+1}";
+            var amount = 200;
 
             // API-ის ინიცირება
             var desk3500Api = new Desk3500Api(baseUrl, licenseToken, alias, userName, password);
@@ -23,7 +25,7 @@ namespace Desk3500
             {
                 var operatorId = "Cashier-5";
 
-                // 1. POS_თან კავშირის დამყარება
+                // 1. POS_თან კავშირის დამყარება 638633376000000000
                 await desk3500Api.OpenPos();
 
                // 1.კავშირის დასასრული
@@ -32,21 +34,25 @@ namespace Desk3500
 
                 Console.WriteLine();
 
-                await desk3500Api.UnlockAndWaitForCard(100, operatorId);
+                //await desk3500Api.UnlockAndWaitForCard(100, operatorId);
+
+                await desk3500Api.UnlockDevice(amount, operatorId);
+
+                await desk3500Api.WaitForCardEvent();
 
                 Console.WriteLine();
 
                 // 2. გადახდის ავტორიზაცია (თანხა არის თეთრებში. 1000 ნიშნავს 10.00 ლარს)
-                await desk3500Api.AuthorizePayment(100, docNo);
+                await desk3500Api.AuthorizePayment(amount, docNo);
+
+                await desk3500Api.WaitForCardEventResponse();
 
                 Console.WriteLine();
 
-                await Task.Delay(5000);
+                // await Task.Delay(3000);
 
                 // 3. სტატუსის გადამოწმება (optional)
                 var tranStatus = await desk3500Api.GetTransactionStatus(documentNr: docNo);
-
-                // var tranStatus = await desk3500Api.WaitForCardEventResponse();
 
                 await desk3500Api.CloseDoc(docNo);
 
