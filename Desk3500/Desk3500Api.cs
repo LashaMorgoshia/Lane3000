@@ -367,8 +367,9 @@ namespace Desk3500
             Console.WriteLine("Transaction Voided: " + result);
         }
 
-        public async Task GetTransactionStatus(string documentNr = "", string operationId = "", string cryptogram = "")
+        public async Task<TransactionStatus> GetTransactionStatus(string documentNr = "", string operationId = "", string cryptogram = "")
         {
+            var transactionStatus = new TransactionStatus();
             var url = $"{baseUrl}/v105/executeposcmd";
             var requestJson = $@"
         {{
@@ -385,6 +386,42 @@ namespace Desk3500
             var response = await SendPostRequest(url, requestJson);
             var result = await response.Content.ReadAsStringAsync();
             Console.WriteLine("5. Transaction Status: " + result);
+
+            transactionStatus = await GetTranStatusResponse();
+            // transactionStatus = await GetTranStatusResponse();
+            return transactionStatus;
+        }
+
+        public async Task<TransactionStatus> GetTranStatusResponse()
+        {
+            var url = $"{baseUrl}/v105/getEvent";
+            var transactionStatus = new TransactionStatus();
+            
+                var response = await SendPostRequest(url, "{}");
+                var result = await response.Content.ReadAsStringAsync();
+
+
+                if (result.Contains("\"eventName\":\"ONTRNSTATUS\""))
+                {
+                    Console.WriteLine("6. Event Response: " + result);
+                    Console.WriteLine();
+                    // Parse the JSON
+                    transactionStatus = JsonConvert.DeserializeObject<TransactionStatus>(result);
+                    // Output parsed values
+                    Console.WriteLine($"Event Name: {transactionStatus.EventName}");
+                    Console.WriteLine($"Document Number: {transactionStatus.Properties.DocumentNr}");
+                    Console.WriteLine($"State: {transactionStatus.Properties.State}");
+                    Console.WriteLine($"Result Code: {transactionStatus.Result.ResultCode}");
+                    Console.WriteLine($"Result Message: {transactionStatus.Result.ResultMessage}");
+                    
+                }
+
+                // No need for Task.Delay here if using long polling
+                // break;
+                // await Task.Delay(1000);
+            
+
+            return transactionStatus;
         }
     }
 }

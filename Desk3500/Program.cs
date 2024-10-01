@@ -26,9 +26,9 @@ namespace Desk3500
                 // 1. POS_თან კავშირის დამყარება
                 await desk3500Api.OpenPos();
 
-                // 1. კავშირის დასასრული
-                //await desk3500Api.CloseDay(operatorId);
-                //return;
+               // 1.კავშირის დასასრული
+               //await desk3500Api.CloseDay(operatorId);
+               // return;
 
                 Console.WriteLine();
 
@@ -41,10 +41,12 @@ namespace Desk3500
 
                 Console.WriteLine();
 
-                // 3. სტატუსის გადამოწმება (optional)
-                await desk3500Api.GetTransactionStatus(documentNr: docNo);
+                await Task.Delay(5000);
 
-                var tranStatus = await desk3500Api.WaitForCardEventResponse();
+                // 3. სტატუსის გადამოწმება (optional)
+                var tranStatus = await desk3500Api.GetTransactionStatus(documentNr: docNo);
+
+                // var tranStatus = await desk3500Api.WaitForCardEventResponse();
 
                 await desk3500Api.CloseDoc(docNo);
 
