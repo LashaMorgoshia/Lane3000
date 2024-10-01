@@ -74,7 +74,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AuthorizeAmountRequest.cs" />
+    <Compile Include="AuthAmountRequest.cs" />
     <Compile Include="Desk3500Api.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

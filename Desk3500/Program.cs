@@ -40,12 +40,13 @@ namespace Desk3500
 
                 var tranStatus = await desk3500Api.WaitForCardEventResponse();
 
-                if (tranStatus != null && tranStatus.Properties.State == "Declined")
-                {
-                    Console.WriteLine();
-                    await desk3500Api.CloseDoc(docNo);
-                }
+                //if (tranStatus != null && tranStatus.Properties.State == "Declined")
+                //{
+                //    Console.WriteLine();
 
+                //}
+
+                await desk3500Api.CloseDoc(docNo);
 
                 await Task.Delay(5000);
 
@@ -59,6 +60,9 @@ namespace Desk3500
 
                 // 6. კავშირის დასასრული
                 await desk3500Api.ClosePos();
+
+                // 6. კავშირის დასასრული
+                await desk3500Api.LockDevice();
 
                 Console.ReadLine();
             }

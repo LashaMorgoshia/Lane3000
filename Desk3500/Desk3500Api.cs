@@ -219,6 +219,30 @@ namespace Desk3500
             }
         }
 
+        public async Task LockDevice()
+        {
+            try
+            {
+                var url = $"{baseUrl}/v105/executeposcmd";
+                var requestJson = $@"
+        {{
+            ""header"": {{
+                ""command"": ""LOCKDEVICE""
+            }},
+            ""params"": {{
+                ""idleText"": ""READY""
+            }}
+        }}";
+
+                var response = await SendPostRequest(url, requestJson);
+                var result = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Close Doc: " + result);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("CloseDoc: " + ex.Message);
+            }
+        }
 
         public async Task ClosePos()
         {
