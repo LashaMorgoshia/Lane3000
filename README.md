@@ -1,42 +1,62 @@
+            // პარამეტრები
+            var baseUrl = "http://localhost:6678";
+            var licenseToken = "your-license-token";
+            var alias = "POS1";
+            var userName = "your-username";
+            var password = "your-password";
 
-    // პარამეტრები
-    var baseUrl = "https://your-terminal-url";
+            var docNo = $"{DateTime.Now.Year}{DateTime.Now.Month}{DateTime.Now.Day}";
 
-    var licenseToken = "your-license-token";
+            // API-ის ინიცირება
+            var desk3500Api = new Desk3500Api(baseUrl, licenseToken, alias, userName, password);
+            
+            try
+            {
+                var operatorId = "Cashier-5";
 
-    var alias = "POS1";
+                // 1. POS_თან კავშირის დამყარება
+                await desk3500Api.OpenPos();
 
-    var userName = "your-username";
+                // 1. კავშირის დასასრული
+                //await desk3500Api.CloseDay(operatorId);
+                //return;
 
-    var password = "your-password";
+                Console.WriteLine();
 
-    // API-ის ინიცირება
-    var desk3500Api = new Desk3500Api(baseUrl, licenseToken, alias, userName, password);
+                await desk3500Api.UnlockAndWaitForCard(100, operatorId);
 
-    try
-    {
-    
+                Console.WriteLine();
 
-        // 1. POS_თან კავშირის დამყარება
-        await desk3500Api.OpenPos();
+                // 2. გადახდის ავტორიზაცია (თანხა არის თეთრებში. 1000 ნიშნავს 10.00 ლარს)
+                await desk3500Api.AuthorizePayment(100, docNo);
 
-        // 2. გადახდის ავტორიზაცია (თანხა არის თეთრებში. 1000 ნიშნავს 10.00 ლარს)
-        await desk3500Api.AuthorizePayment(1000, "123456");
+                Console.WriteLine();
 
-        // 3. სტატუსის გადამოწმება (optional)
-        await desk3500Api.GetTransactionStatus(documentNr: "123456");
+                // 3. სტატუსის გადამოწმება (optional)
+                await desk3500Api.GetTransactionStatus(documentNr: docNo);
 
-        // // 4. უკან დაბრუნება
-        // // await desk3500Api.RefundPayment(1000, "123456", "123456", "933315462707");
+                var tranStatus = await desk3500Api.WaitForCardEventResponse();
 
-        // // 5. ავტორიზებული ტრანზაქციის გაუქმება, რომელიც არ იყო დასრულებული
-        // // await desk3500Api.VoidPayment("A0000000041010");
+                await desk3500Api.CloseDoc(docNo);
 
-        // 6. კავშირის დასასრული
-        await desk3500Api.ClosePos();
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine("Error: " + ex.Message);
-    }
-    
+                Console.WriteLine();
+
+                // 4. უკან დაბრუნება
+                // await desk3500Api.RefundPayment(1000, "123456", "123456", "933315462707");
+
+                // 5. ავტორიზებული ტრანზაქციის გაუქმება, რომელიც არ იყო დასრულებული
+                // await desk3500Api.VoidPayment("A0000000041010");
+
+                // 6. კავშირის დასასრული
+                await desk3500Api.LockDevice();
+
+                // 7. კავშირის დასასრული
+                await desk3500Api.ClosePos();
+
+                Console.ReadLine();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+            }
+        }
