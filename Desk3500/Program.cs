@@ -14,19 +14,25 @@ namespace Desk3500
             var userName = "your-username";
             var password = "your-password";
 
-            var docNo = $"S-ORD{DateTime.Now.Ticks.ToString().Substring(0, 7)}";
+            var docNo = $"{DateTime.Now.Year}{DateTime.Now.Month}{DateTime.Now.Day}";
 
             // API-ის ინიცირება
             var desk3500Api = new Desk3500Api(baseUrl, licenseToken, alias, userName, password);
             
             try
             {
+                var operatorId = "Cashier-5";
+
                 // 1. POS_თან კავშირის დამყარება
                 await desk3500Api.OpenPos();
 
+                // 1. კავშირის დასასრული
+                //await desk3500Api.CloseDay(operatorId);
+                //return;
+
                 Console.WriteLine();
 
-                await desk3500Api.UnlockAndWaitForCard(100, "Cashier-5");
+                await desk3500Api.UnlockAndWaitForCard(100, operatorId);
 
                 Console.WriteLine();
 
@@ -40,15 +46,7 @@ namespace Desk3500
 
                 var tranStatus = await desk3500Api.WaitForCardEventResponse();
 
-                //if (tranStatus != null && tranStatus.Properties.State == "Declined")
-                //{
-                //    Console.WriteLine();
-
-                //}
-
                 await desk3500Api.CloseDoc(docNo);
-
-                await Task.Delay(5000);
 
                 Console.WriteLine();
 
@@ -59,10 +57,10 @@ namespace Desk3500
                 // await desk3500Api.VoidPayment("A0000000041010");
 
                 // 6. კავშირის დასასრული
-                await desk3500Api.ClosePos();
-
-                // 6. კავშირის დასასრული
                 await desk3500Api.LockDevice();
+
+                // 7. კავშირის დასასრული
+                await desk3500Api.ClosePos();
 
                 Console.ReadLine();
             }

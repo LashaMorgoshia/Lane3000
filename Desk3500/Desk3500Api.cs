@@ -71,12 +71,11 @@ namespace Desk3500
 
             var response = await SendPostRequest(url, requestJson);
             var result = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("POS Connection Opened: " + result);
             using (JsonDocument doc = JsonDocument.Parse(result))
             {
                 // Extract the access token
                 accessToken = doc.RootElement.GetProperty("accessToken").GetString();
-                Console.WriteLine("Access Token: " + accessToken);
+                Console.WriteLine("1. Access Token: " + accessToken);
             }
             // accessToken = "extracted-access-token"; // Update this based on response parsing
         }
@@ -97,7 +96,7 @@ namespace Desk3500
 
                 if (result.Contains("\"eventName\":\"ONCARD\""))
                 {
-                    Console.WriteLine("Card detected! Proceeding to authorization...");
+                    Console.WriteLine("3. Card detected! Proceeding to authorization...");
                     break;
                 }
                 // No need for Task.Delay here if using long polling
@@ -141,7 +140,7 @@ namespace Desk3500
 
                 if (result.Contains("\"eventName\":\"ONTRNSTATUS\""))
                 {
-                    Console.WriteLine("Event Response: " + result);
+                    Console.WriteLine("6. Event Response: " + result);
                     Console.WriteLine();
                     // Parse the JSON
                     transactionStatus = JsonConvert.DeserializeObject<TransactionStatus>(result);
@@ -191,7 +190,7 @@ namespace Desk3500
 
             var response = await SendPostRequest(url, requestJson);
             var result = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("Device Unlocked: " + result);
+            Console.WriteLine("2. Device Unlocked: " + result);
             return result;
         }
 
@@ -212,10 +211,36 @@ namespace Desk3500
 
                 var response = await SendPostRequest(url, requestJson);
                 var result = await response.Content.ReadAsStringAsync();
-                Console.WriteLine("Close Doc: " + result);
+                Console.WriteLine("7. Close Doc: " + result);
             }
             catch(Exception ex) {
-                Console.WriteLine("CloseDoc: " + ex.Message);
+                Console.WriteLine("7. CloseDoc: " + ex.Message);
+            }
+        }
+
+        public async Task CloseDay(string operatorId)
+        {
+            try
+            {
+                var url = $"{baseUrl}/v105/executeposcmd";
+                var requestJson = $@"
+        {{
+            ""header"": {{
+                ""command"": ""CLOSEDAY""
+            }},
+            ""params"": {{
+                ""operatorId"": ""{operatorId}"",
+""operatorName"": ""Anna"",
+            }}
+        }}";
+
+                var response = await SendPostRequest(url, requestJson);
+                var result = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("8. Close Doc: " + result);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("8. CloseDoc: " + ex.Message);
             }
         }
 
@@ -236,11 +261,11 @@ namespace Desk3500
 
                 var response = await SendPostRequest(url, requestJson);
                 var result = await response.Content.ReadAsStringAsync();
-                Console.WriteLine("Close Doc: " + result);
+                Console.WriteLine("8. Close Doc: " + result);
             }
             catch (Exception ex)
             {
-                Console.WriteLine("CloseDoc: " + ex.Message);
+                Console.WriteLine("8. CloseDoc: " + ex.Message);
             }
         }
 
@@ -254,7 +279,7 @@ namespace Desk3500
 
             var response = await SendPostRequest(url, requestJson);
             var result = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("POS Connection Closed: " + result);
+            Console.WriteLine("10. POS Connection Closed: " + result);
         }
 
         public static string CreateJson(int amount, string currencyCode, string documentNr, string panL4Digit)
@@ -299,7 +324,7 @@ namespace Desk3500
 
             var response = await SendPostRequest(url, requestJson);
             var result = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("Payment Authorized: " + result);
+            Console.WriteLine("4. Payment Authorized: " + result);
         }
 
         public async Task RefundPayment(int amount, string documentNr, string stan, string rrn, string currencyCode = "981")
@@ -359,7 +384,7 @@ namespace Desk3500
 
             var response = await SendPostRequest(url, requestJson);
             var result = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("Transaction Status: " + result);
+            Console.WriteLine("5. Transaction Status: " + result);
         }
     }
 }
