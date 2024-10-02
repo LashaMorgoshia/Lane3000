@@ -96,11 +96,35 @@ namespace Desk3500
 
                 if (result.Contains("\"eventName\":\"ONCARD\""))
                 {
-                    Console.WriteLine("3. Card detected! Proceeding to authorization...");
+                    Console.WriteLine($"3. Card detected! Proceeding to authorization: {result}");
                     break;
                 }
                 // No need for Task.Delay here if using long polling
-                //break;
+                await Task.Delay(1000);
+            }
+        }
+
+        public async Task WaitForDayCloseEvent()
+        {
+            var url = $"{baseUrl}/v105/getEvent";
+
+            while (true)
+            {
+                var response = await SendPostRequest(url, "{}");
+                var result = await response.Content.ReadAsStringAsync();
+                if (!result.Contains("Queue empty."))
+                {
+                    Console.WriteLine("Event Response: " + result);
+                    Console.WriteLine();
+                }
+                if (result.Contains("\"eventName\":\"ONPRINT\""))
+                {
+                    Console.WriteLine("1. Day Close Event:");
+                    Console.WriteLine(result);
+                    break;
+                }
+                // No need for Task.Delay here if using long polling
+                await Task.Delay(1000);
             }
         }
 
@@ -124,7 +148,7 @@ namespace Desk3500
                     Console.WriteLine("Card detected! Proceeding to authorization...");
                 }
                 // No need for Task.Delay here if using long polling
-                //break;
+                await Task.Delay(1000);
             }
         }
 
@@ -136,11 +160,16 @@ namespace Desk3500
             {
                 var response = await SendPostRequest(url, "{}");
                 var result = await response.Content.ReadAsStringAsync();
-                
+
+                if (result.Contains("\"eventName\":\"ONPRINT\""))
+                {
+                    Console.WriteLine("On Auth:");
+                    Console.WriteLine(result);
+                }
 
                 if (result.Contains("\"eventName\":\"ONTRNSTATUS\""))
                 {
-                    Console.WriteLine("6. Event Response: " + result);
+                    Console.WriteLine("On Auth. Event Response: " + result);
                     Console.WriteLine();
                     // Parse the JSON
                     transactionStatus = JsonConvert.DeserializeObject<TransactionStatus>(result);
@@ -155,7 +184,7 @@ namespace Desk3500
 
                 // No need for Task.Delay here if using long polling
                 // break;
-               // await Task.Delay(1000);
+                await Task.Delay(1000);
             }
 
             return transactionStatus;
@@ -387,7 +416,7 @@ namespace Desk3500
             var result = await response.Content.ReadAsStringAsync();
             Console.WriteLine("5. Transaction Status: " + result);
 
-            transactionStatus = await GetTranStatusResponse();
+            // transactionStatus = await GetTranStatusResponse();
             // transactionStatus = await GetTranStatusResponse();
             return transactionStatus;
         }
