@@ -104,58 +104,11 @@ namespace Desk3500
             }
         }
 
-        public async Task WaitForDayCloseEvent()
-        {
-            var url = $"{baseUrl}/v105/getEvent";
-
-            while (true)
-            {
-                var response = await SendPostRequest(url, "{}");
-                var result = await response.Content.ReadAsStringAsync();
-                if (!result.Contains("Queue empty."))
-                {
-                    Console.WriteLine("Event Response: " + result);
-                    Console.WriteLine();
-                }
-                if (result.Contains("\"eventName\":\"ONPRINT\""))
-                {
-                    Console.WriteLine("1. Day Close Event:");
-                    Console.WriteLine(result);
-                    break;
-                }
-                // No need for Task.Delay here if using long polling
-                await Task.Delay(1000);
-            }
-        }
-
-        public async Task WaitForAuthResponse()
-        {
-            var url = $"{baseUrl}/v105/getEvent?longPollingTimeout=10";
-
-            while (true)
-            {
-                var response = await SendPostRequest(url, "{}");
-                var result = await response.Content.ReadAsStringAsync();
-                if (!result.Contains("Queue empty."))
-                {
-                    Console.WriteLine("Event Response: " + result);
-                    Console.WriteLine();
-                    // break;
-                }
-
-                if (result.Contains("\"eventName\":\"ONCARD\""))
-                {
-                    Console.WriteLine("Card detected! Proceeding to authorization...");
-                }
-                // No need for Task.Delay here if using long polling
-                await Task.Delay(1000);
-            }
-        }
-
         public async Task<TransactionStatus> WaitForCardEventResponse()
         {
             var url = $"{baseUrl}/v105/getEvent";
             var transactionStatus = new TransactionStatus();
+            var printResult = new PrintResult() ;
             while (true)
             {
                 var response = await SendPostRequest(url, "{}");
@@ -165,6 +118,7 @@ namespace Desk3500
                 {
                     Console.WriteLine("On Auth:");
                     Console.WriteLine(result);
+                    printResult = JsonConvert.DeserializeObject<PrintResult>(result);
                 }
 
                 if (result.Contains("\"eventName\":\"ONTRNSTATUS\""))
@@ -186,7 +140,7 @@ namespace Desk3500
                 // break;
                 await Task.Delay(1000);
             }
-
+            transactionStatus.PrintResult = printResult;
             return transactionStatus;
         }
 

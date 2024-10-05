@@ -16,7 +16,7 @@ namespace Desk3500
 
             // var docNo = $"{DateTime.Now.Date.Ticks}";
             var docNo = $"{DateTime.Now.Ticks}";
-            var amount = 9000;
+            var amount = 250;
 
             // API-ის ინიცირება
             var desk3500Api = new Desk3500Api(baseUrl, licenseToken, alias, userName, password);

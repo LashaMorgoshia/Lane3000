@@ -13,6 +13,7 @@ namespace Desk3500
 
         [JsonPropertyName("result")]
         public Result Result { get; set; }
+        public PrintResult PrintResult { get; set; }
     }
 
     public class Properties
@@ -91,5 +92,16 @@ namespace Desk3500
 
         [JsonPropertyName("resultTime")]
         public string ResultTime { get; set; }
+    }
+
+    public class PrintResult
+    {
+        public PrintProperties Properties { get; set; }
+    }
+
+    public class PrintProperties
+    {
+        public string ReceiptText { get; set; }
+        public string DocumentNr { get; set; }
     }
 }
