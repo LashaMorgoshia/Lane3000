@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Desk3500", "Desk3500\Desk35
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TranslinkPayment", "TranslinkPayment\TranslinkPayment.csproj", "{F1C6D788-75B4-4BFD-9FBD-B60C5716B3E3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TranslinkPaymentTests", "TranslinkPaymentTests\TranslinkPaymentTests.csproj", "{20FEC6C8-8747-48CA-92C4-8F0A366A5720}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{F1C6D788-75B4-4BFD-9FBD-B60C5716B3E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F1C6D788-75B4-4BFD-9FBD-B60C5716B3E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F1C6D788-75B4-4BFD-9FBD-B60C5716B3E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20FEC6C8-8747-48CA-92C4-8F0A366A5720}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20FEC6C8-8747-48CA-92C4-8F0A366A5720}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20FEC6C8-8747-48CA-92C4-8F0A366A5720}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20FEC6C8-8747-48CA-92C4-8F0A366A5720}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

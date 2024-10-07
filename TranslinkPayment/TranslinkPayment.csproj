@@ -50,6 +50,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TranslinkPaymentService.cs" />
     <Compile Include="TranslinkPaymentTests.cs" />
+    <Compile Include="TranslinkPaymentTestsV1.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
