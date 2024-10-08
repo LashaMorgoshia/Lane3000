@@ -84,7 +84,9 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
 
         await Assert.ThrowsAsync<Exception>(async () =>
         {
-            await _paymentService.AuthorizeTransactionAsync(amount, _docNo, _currCode, _panL4Digit);
+            var response = await _paymentService.AuthorizeTransactionAsync(amount, _docNo, _currCode, _panL4Digit);
+            if (response.Properties.State == "Declined")
+                throw new Exception("Unexpected Exception");
         });
 
         await _paymentService.LockDeviceAsync();

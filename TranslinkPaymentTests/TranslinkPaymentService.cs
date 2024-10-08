@@ -251,6 +251,38 @@ public class TranslinkPaymentService
         return null;
     }
 
+    public async Task<AuthorizeResponse> AuthorizeThrowAsync(decimal amount, string documentNr, string currencyCode, string panL4Digit)
+    {
+        var amountInCents = (int)Math.Round(amount * 100);
+
+        var requestData = new
+        {
+            header = new { command = "AUTHORIZE" },
+            @params = new
+            {
+                amount = amountInCents,
+                cashBackAmount = 0,
+                currencyCode,
+                documentNr,
+                panL4Digit
+            }
+        };
+
+        var response = await _httpClient.PostAsync($"{_apiBaseUrl}/executeposcmd",
+            new StringContent(JsonConvert.SerializeObject(requestData), Encoding.UTF8, "application/json"));
+
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        if (response.IsSuccessStatusCode)
+        {
+            var authorizeResponse = JsonConvert.DeserializeObject<AuthorizeResponse>(responseContent);
+            return await WaitForAuthResponse();
+        }
+        
+
+        return null;
+    }
+
     public async Task ClosePosAsync()
     {
         var response = await _httpClient.PostAsync($"{_apiBaseUrl}/closepos", null);
