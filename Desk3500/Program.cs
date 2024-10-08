@@ -27,6 +27,10 @@ namespace Desk3500
                 // Init Token
                 await Auth();
 
+                // close day
+                await DayClose();
+                return;
+
                 // T01
                 await Purchase(9.99m);
 

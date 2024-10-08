@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -91,11 +92,16 @@ public class TranslinkPaymentService
         await WaitForCardEvent();
     }
 
-    public async Task LockDeviceAsync()
+    public async Task CloseDocAsync(string docNo)
     {
         var requestData = new
         {
-            header = new { command = "LOCKDEVICE" }
+            header = new { command = "CLOSEDOC" },
+            @params = new
+            {
+                idleText = "READY",
+                documentNr = docNo
+            }
         };
 
         var response = await _httpClient.PostAsync($"{_apiBaseUrl}/executeposcmd",
@@ -109,62 +115,25 @@ public class TranslinkPaymentService
         }
     }
 
-    // Method to wait for a specific event
-    private async Task WaitForEventAsync(string expectedEvent, string operationId, TimeSpan timeout)
+    public async Task LockDeviceAsync()
     {
-        var cancellationTokenSource = new CancellationTokenSource(timeout);
-        var cancellationToken = cancellationTokenSource.Token;
-        string statusUrl = $"{_apiBaseUrl}/getposcmdstatus";
-
-        try
+        var requestData = new
         {
-            while (!cancellationToken.IsCancellationRequested)
+            header = new { command = "LOCKDEVICE" },
+            @params = new
             {
-                // Prepare the request to get the status of the operation
-                var statusRequestData = new
-                {
-                    operationId = operationId
-                };
-
-                var response = await _httpClient.PostAsync(statusUrl,
-                    new StringContent(JsonConvert.SerializeObject(statusRequestData), Encoding.UTF8, "application/json"));
-
-                var responseContent = await response.Content.ReadAsStringAsync();
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var statusResponse = JsonConvert.DeserializeObject<StatusResponse>(responseContent);
-
-                    // Check if the expected event has occurred
-                    if (statusResponse.Events != null)
-                    {
-                        foreach (var evt in statusResponse.Events)
-                        {
-                            if (evt.EventName == expectedEvent)
-                            {
-                                // Event occurred, exit the method
-                                return;
-                            }
-                        }
-                    }
-
-                    // Optionally, check for errors or abort conditions
-                    if (statusResponse.Status == "Error")
-                    {
-                        //throw new Exception($"Error occurred while waiting for event: {statusResponse.ErrorMessage}");
-                    }
-                }
-                
-
-                // Wait for a short interval before polling again
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                idleText = "READY",
             }
+        };
 
-            //throw new TimeoutException($"Timeout occurred while waiting for event '{expectedEvent}'.");
-        }
-        catch (TaskCanceledException)
+        var response = await _httpClient.PostAsync($"{_apiBaseUrl}/executeposcmd",
+            new StringContent(JsonConvert.SerializeObject(requestData), Encoding.UTF8, "application/json"));
+
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
         {
-            // throw new TimeoutException($"Timeout occurred while waiting for event '{expectedEvent}'.");
+            //throw new Exception($"Failed to lock device: {response.ReasonPhrase}. Details: {responseContent}");
         }
     }
 
@@ -185,8 +154,6 @@ public class TranslinkPaymentService
                 Console.WriteLine($"3. Card detected! Proceeding to authorization: {result}");
                 break;
             }
-            // No need for Task.Delay here if using long polling
-            await Task.Delay(1000);
         }
     }
 
@@ -213,10 +180,6 @@ public class TranslinkPaymentService
                 transactionStatus.PrintResult = printResult;
                 return transactionStatus;
             }
-
-            // No need for Task.Delay here if using long polling
-            // break;
-            await Task.Delay(1000);
         }
     }
 
@@ -245,7 +208,7 @@ public class TranslinkPaymentService
         if (response.IsSuccessStatusCode)
         {
             var authorizeResponse = JsonConvert.DeserializeObject<AuthorizeResponse>(responseContent);
-            return await WaitForAuthResponse();
+            return authorizeResponse;
         }
 
         return null;
@@ -328,12 +291,6 @@ public class TranslinkPaymentService
         {
             var response = await _httpClient.PostAsync($"{_apiBaseUrl}/getEvent", new StringContent("{}", Encoding.UTF8, "application/json"));
             var result = await response.Content.ReadAsStringAsync();
-            if (!result.Contains("Queue empty."))
-            {
-                Console.WriteLine("Event Response: " + result);
-                Console.WriteLine();
-            }
-
             if (result.Contains("\"eventName\":\"ONDISPLAYTEXT\""))
             {
 
@@ -341,21 +298,13 @@ public class TranslinkPaymentService
 
             if (result.Contains("\"eventName\":\"ONTRNSTATUS\""))
             {
-                //Console.WriteLine("On Auth. Event Response: " + result);
-                //Console.WriteLine();
-                // Parse the JSON
-
                 transactionStatus = JsonConvert.DeserializeObject<VoidResponse>(result);
-                //transactionStatus.PrintResult = printResult;
-                 return transactionStatus;
+                return transactionStatus;
             }
-
-            // No need for Task.Delay here if using long polling
-            await Task.Delay(1000);
         }
     }
 
-    public async Task<RefundResponse> RefundTransactionAsync(decimal amount, string documentNr, string currencyCode, string panL4Digit)
+    public async Task<RefundResponse> RefundTransactionAsync(string stan, string rrn, decimal amount, string documentNr, string currencyCode, string panL4Digit)
     {
         var amountInCents = (int)Math.Round(amount * 100);
 
@@ -370,8 +319,8 @@ public class TranslinkPaymentService
                 panL4Digit,
                 time = DateTime.UtcNow.ToString("yyyyMMddHHmmss"),
                 // STAN and RRN should be generated or retrieved appropriately
-                STAN = GenerateStan(),
-                RRN = GenerateRrn()
+                STAN = stan,
+                RRN = rrn
             }
         };
 
@@ -388,12 +337,28 @@ public class TranslinkPaymentService
         return null;
     }
 
-    public async Task<CloseDayResponse> CloseDayAsync()
+    public async Task<CloseDayResponse> CloseDayAsync(string operatorId, string operatorName)
     {
         var requestData = new
         {
-            header = new { command = "CLOSEDAY" }
+            header = new { command = "CLOSEDAY" },
+            @params = new
+            {
+                operatorId = operatorId,
+                operatorName = operatorName
+            }
         };
+
+//        var requestJson = $@"
+//        {{
+//            ""header"": {{
+//                ""command"": ""CLOSEDAY""
+//            }},
+//            ""params"": {{
+//                ""operatorId"": ""{operatorId}"",
+//""operatorName"": ""{operatorName}""
+//            }}
+//        }}";
 
         var response = await _httpClient.PostAsync($"{_apiBaseUrl}/executeposcmd",
             new StringContent(JsonConvert.SerializeObject(requestData), Encoding.UTF8, "application/json"));
@@ -403,8 +368,18 @@ public class TranslinkPaymentService
         if (response.IsSuccessStatusCode)
         {
             var closeDayResponse = JsonConvert.DeserializeObject<CloseDayResponse>(responseContent);
-            return closeDayResponse;
         }
+
+        //while (true)
+        //{
+        //    var trnStatus = await _httpClient.PostAsync($"{_apiBaseUrl}/getEvent", new StringContent("{}", Encoding.UTF8, "application/json"));
+        //    var result = await trnStatus.Content.ReadAsStringAsync();
+        //    if (result.Contains("\"eventName\":\"ONTRNSTATUS\""))
+        //    {
+        //        var respo = JsonConvert.DeserializeObject<CloseDayResponse>(result);
+        //        return respo;
+        //    }
+        //}
         return null;
     }
 
@@ -421,8 +396,10 @@ public class TranslinkPaymentService
             }
         };
 
-        var response = await _httpClient.PostAsync($"{_apiBaseUrl}/sendversion",
-            new StringContent(JsonConvert.SerializeObject(requestData), Encoding.UTF8, "application/json"));
+        //var response = await _httpClient.GetAsync($"{_apiBaseUrl}/getsoftwareversions",
+        //    new StringContent(JsonConvert.SerializeObject(requestData), Encoding.UTF8, "application/json"));
+
+        var response = await _httpClient.GetAsync($"{_apiBaseUrl}/getsoftwareversions");
 
         var responseContent = await response.Content.ReadAsStringAsync();
 
