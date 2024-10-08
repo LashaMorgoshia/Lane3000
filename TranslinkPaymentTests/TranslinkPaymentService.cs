@@ -456,14 +456,28 @@ public class VoidResponse
 
 public class RefundResponse
 {
-    public string Status { get; set; }
-    // Add other relevant properties
+    [JsonPropertyName("eventName")]
+    public string EventName { get; set; }
+
+    [JsonPropertyName("properties")]
+    public Properties Properties { get; set; }
+
+    [JsonPropertyName("result")]
+    public Result Result { get; set; }
+    public PrintResult PrintResult { get; set; }
 }
 
 public class CloseDayResponse
 {
-    public string Status { get; set; }
-    // Add other relevant properties
+    [JsonPropertyName("eventName")]
+    public string EventName { get; set; }
+
+    [JsonPropertyName("properties")]
+    public Properties Properties { get; set; }
+
+    [JsonPropertyName("result")]
+    public Result Result { get; set; }
+    public PrintResult PrintResult { get; set; }
 }
 
 public class AuthorizeResponse

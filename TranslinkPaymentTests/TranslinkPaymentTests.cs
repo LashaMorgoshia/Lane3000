@@ -99,7 +99,7 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
         decimal amount = 6.51m;
 
         // Act
-        await _paymentService.OpenPosAsync("licenseToken", "alias", "username", "password");
+        await _paymentService.OpenPosAsync("licenseToken", _pos, "username", "password");
         await _paymentService.UnlockDeviceAsync(amount, _currCode, _operatorId, _operatorName); // Amount: 6.66 EUR
         var response = await _paymentService.AuthorizeTransactionAsync(amount, _docNo, _currCode, _panL4Digit);  // Expected: Reversed
         await _paymentService.LockDeviceAsync();
@@ -116,13 +116,18 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
     {
         // Arrange
         decimal amount = 6.70m;
+        _docNo = DateTime.Now.Ticks.ToString();
 
         // Console.WriteLine("Running Test T05 - Purchase with Online PIN...");
         await _paymentService.OpenPosAsync("licenseToken", _pos, "username", "password");
         await _paymentService.UnlockDeviceAsync(amount, _currCode, _operatorId, _operatorName); // Amount: 6.70 EUR
-        await _paymentService.AuthorizeTransactionAsync(amount, _docNo, _currCode, _panL4Digit);  // Terminal will prompt for PIN
+        var response = await _paymentService.AuthorizeTransactionAsync(amount, _docNo, _currCode, _panL4Digit);  // Terminal will prompt for PIN
         await _paymentService.LockDeviceAsync();
         await _paymentService.ClosePosAsync();
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal("Approved", response.Properties.State);
     }
 
     // T06: Declined Transaction (Online Declined)
@@ -134,22 +139,32 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
         _docNo = DateTime.Now.Ticks.ToString();
 
         //Console.WriteLine("Running Test T06 - Declined Transaction...");
-        await _paymentService.OpenPosAsync("licenseToken", "alias", "username", "password");
+        await _paymentService.OpenPosAsync("licenseToken", _pos, "username", "password");
         await _paymentService.UnlockDeviceAsync(amount, _currCode, _operatorId, _operatorName); // Amount: 6.55 EUR
-        await _paymentService.AuthorizeTransactionAsync(amount, _docNo, _currCode, _panL4Digit);  // Expected: Declined
+        var response = await _paymentService.AuthorizeTransactionAsync(amount, _docNo, _currCode, _panL4Digit);  // Expected: Declined
         await _paymentService.LockDeviceAsync();
         await _paymentService.ClosePosAsync();
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal("Approved", response.Properties.State);
     }
 
     // T07: Refund
     [Fact]
     public async Task Test07_Refund()
     {
-        Console.WriteLine("Running Test T07 - Refund...");
-        await _paymentService.OpenPosAsync("licenseToken", "alias", "username", "password");
-        await _paymentService.RefundTransactionAsync(9.99m, "T07", "978", "9999");  // Amount: 9.99 EUR
+        _docNo = DateTime.Now.Ticks.ToString();
+
+        // Console.WriteLine("Running Test T07 - Refund...");
+        await _paymentService.OpenPosAsync("licenseToken", _pos, "username", "password");
+        var response = await _paymentService.RefundTransactionAsync(9.99m, _docNo, _currCode, _panL4Digit);  // Amount: 9.99 EUR
         await _paymentService.LockDeviceAsync();
         await _paymentService.ClosePosAsync();
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal("Approved", response.Properties.State);
     }
 
     // T08: Purchase using QR Code
@@ -157,11 +172,15 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
     public async Task Test08_QRPayment()
     {
         Console.WriteLine("Running Test T08 - QR Payment...");
-        await _paymentService.OpenPosAsync("licenseToken", "alias", "username", "password");
+        await _paymentService.OpenPosAsync("licenseToken", _pos, "username", "password");
         await _paymentService.UnlockDeviceAsync(9.99m, "978", "operatorId", "operatorName"); // Amount: 9.99 EUR
-        await _paymentService.AuthorizeTransactionAsync(9.99m, "T08", "978", "9999");  // QR Payment
+        var response = await _paymentService.AuthorizeTransactionAsync(9.99m, "T08", "978", "9999");  // QR Payment
         await _paymentService.LockDeviceAsync();
         await _paymentService.ClosePosAsync();
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal("Approved", response.Properties.State);
     }
 
     // T09: End of Day
@@ -169,10 +188,14 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
     public async Task Test09_EndOfDay()
     {
         Console.WriteLine("Running Test T09 - End of Day...");
-        await _paymentService.OpenPosAsync("licenseToken", "alias", "username", "password");
-        await _paymentService.CloseDayAsync();  // Perform End of Day operation
+        await _paymentService.OpenPosAsync("licenseToken", _pos, "username", "password");
+        var response = await _paymentService.CloseDayAsync();  // Perform End of Day operation
         await _paymentService.LockDeviceAsync();
         await _paymentService.ClosePosAsync();
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal("Approved", response.Properties.State);
     }
 
     // T10: Send Software Version
@@ -180,11 +203,15 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
     public async Task Test10_SendSoftwareVersion()
     {
         Console.WriteLine("Running Test T10 - Send Software Version...");
-        await _paymentService.OpenPosAsync("licenseToken", "alias", "username", "password");
-        await _paymentService.UnlockDeviceAsync(0, "978", "operatorId", "operatorName");  // No amount needed
-        await _paymentService.SendSoftwareVersionAsync("BDX-BOG-v1.0");
+        await _paymentService.OpenPosAsync("licenseToken", _pos, "username", "password");
+        await _paymentService.UnlockDeviceAsync(0, _currCode, _operatorId, _operatorName);  // No amount needed
+        var response = await _paymentService.SendSoftwareVersionAsync("BDX-BOG-v1.0");
         await _paymentService.LockDeviceAsync();
         await _paymentService.ClosePosAsync();
+
+        // Assert
+        Assert.NotNull(response);
+        // Assert.Equal("Approved", response.Properties.State);
     }
 
     // Fixture to initialize the payment service
