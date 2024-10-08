@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -42,10 +43,7 @@ public class TranslinkPaymentService
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
             return _accessToken;
         }
-        else
-        {
-            throw new Exception($"Failed to open POS connection: {response.ReasonPhrase}. Details: {responseContent}");
-        }
+        return null;
     }
 
     public async Task UnlockDeviceAsync(decimal amount, string currencyCode, string operatorId, string operatorName, string idleText = "Insert Card", string language = "GE", string ecrVersion = "BDX-BOG-v1.0")
@@ -68,7 +66,7 @@ public class TranslinkPaymentService
                 operatorName,
                 //cardTechs = new[] { "EmvChip", "EmvContactless", "MagnetSwipe" },
                 //enabledTranSourceMedias = new[] { "EmvChip", "EmvContactless", "MagnetSwipe" },
-                silentCardRead = false
+                silentCardRead = true
             }
         };
 
@@ -78,10 +76,10 @@ public class TranslinkPaymentService
 
         var responseContent = await response.Content.ReadAsStringAsync();
 
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new Exception($"Failed to unlock device: {response.ReasonPhrase}. Details: {responseContent}");
-        }
+        //if (!response.IsSuccessStatusCode)
+        //{
+        //    throw new Exception($"Failed to unlock device: {response.ReasonPhrase}. Details: {responseContent}");
+        //}
 
         //// Parse the response to get the operationId
         //var unlockResponse = JsonConvert.DeserializeObject<UnlockResponse>(responseContent);
@@ -107,7 +105,7 @@ public class TranslinkPaymentService
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new Exception($"Failed to lock device: {response.ReasonPhrase}. Details: {responseContent}");
+            //throw new Exception($"Failed to lock device: {response.ReasonPhrase}. Details: {responseContent}");
         }
     }
 
@@ -153,7 +151,7 @@ public class TranslinkPaymentService
                     // Optionally, check for errors or abort conditions
                     if (statusResponse.Status == "Error")
                     {
-                        throw new Exception($"Error occurred while waiting for event: {statusResponse.ErrorMessage}");
+                        //throw new Exception($"Error occurred while waiting for event: {statusResponse.ErrorMessage}");
                     }
                 }
                 
@@ -162,7 +160,7 @@ public class TranslinkPaymentService
                 await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
             }
 
-            throw new TimeoutException($"Timeout occurred while waiting for event '{expectedEvent}'.");
+            //throw new TimeoutException($"Timeout occurred while waiting for event '{expectedEvent}'.");
         }
         catch (TaskCanceledException)
         {
@@ -202,33 +200,24 @@ public class TranslinkPaymentService
             var result = await response.Content.ReadAsStringAsync();
 
             if (result.Contains("\"eventName\":\"ONPRINT\""))
-            {
-                //Console.WriteLine("On Auth:");
-                //Console.WriteLine(result);
                 printResult = JsonConvert.DeserializeObject<PrintResult>(result);
-            }
+            
 
             if (result.Contains("\"eventName\":\"ONTRNSTATUS\""))
             {
                 //Console.WriteLine("On Auth. Event Response: " + result);
                 //Console.WriteLine();
                 // Parse the JSON
+                
                 transactionStatus = JsonConvert.DeserializeObject<AuthorizeResponse>(result);
-                //// Output parsed values
-                //Console.WriteLine($"Event Name: {transactionStatus.EventName}");
-                //Console.WriteLine($"Document Number: {transactionStatus.Properties.DocumentNr}");
-                //Console.WriteLine($"State: {transactionStatus.Properties.State}");
-                //Console.WriteLine($"Result Code: {transactionStatus.Result.ResultCode}");
-                //Console.WriteLine($"Result Message: {transactionStatus.Result.ResultMessage}");
-                break;
+                transactionStatus.PrintResult = printResult;
+                return transactionStatus;
             }
 
             // No need for Task.Delay here if using long polling
             // break;
             await Task.Delay(1000);
         }
-        transactionStatus.PrintResult = printResult;
-        return transactionStatus;
     }
 
     public async Task<AuthorizeResponse> AuthorizeTransactionAsync(decimal amount, string documentNr, string currencyCode, string panL4Digit)
@@ -270,7 +259,7 @@ public class TranslinkPaymentService
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new Exception($"Failed to close POS connection: {response.ReasonPhrase}. Details: {responseContent}");
+            //throw new Exception($"Failed to close POS connection: {response.ReasonPhrase}. Details: {responseContent}");
         }
     }
 
@@ -295,11 +284,42 @@ public class TranslinkPaymentService
         if (response.IsSuccessStatusCode)
         {
             var voidResponse = JsonConvert.DeserializeObject<VoidResponse>(responseContent);
-            return voidResponse;
         }
-        else
+
+        return await WaitForVoidResponse();
+    }
+
+    public async Task<VoidResponse> WaitForVoidResponse()
+    {
+        var transactionStatus = new VoidResponse();
+        while (true)
         {
-            throw new Exception($"Failed to void transaction: {response.ReasonPhrase}. Details: {responseContent}");
+            var response = await _httpClient.PostAsync($"{_apiBaseUrl}/getEvent", new StringContent("{}", Encoding.UTF8, "application/json"));
+            var result = await response.Content.ReadAsStringAsync();
+            if (!result.Contains("Queue empty."))
+            {
+                Console.WriteLine("Event Response: " + result);
+                Console.WriteLine();
+            }
+
+            if (result.Contains("\"eventName\":\"ONDISPLAYTEXT\""))
+            {
+
+            }
+
+            if (result.Contains("\"eventName\":\"ONTRNSTATUS\""))
+            {
+                //Console.WriteLine("On Auth. Event Response: " + result);
+                //Console.WriteLine();
+                // Parse the JSON
+
+                transactionStatus = JsonConvert.DeserializeObject<VoidResponse>(result);
+                //transactionStatus.PrintResult = printResult;
+                 return transactionStatus;
+            }
+
+            // No need for Task.Delay here if using long polling
+            await Task.Delay(1000);
         }
     }
 
@@ -333,10 +353,7 @@ public class TranslinkPaymentService
             var refundResponse = JsonConvert.DeserializeObject<RefundResponse>(responseContent);
             return refundResponse;
         }
-        else
-        {
-            throw new Exception($"Failed to refund transaction: {response.ReasonPhrase}. Details: {responseContent}");
-        }
+        return null;
     }
 
     public async Task<CloseDayResponse> CloseDayAsync()
@@ -356,13 +373,10 @@ public class TranslinkPaymentService
             var closeDayResponse = JsonConvert.DeserializeObject<CloseDayResponse>(responseContent);
             return closeDayResponse;
         }
-        else
-        {
-            throw new Exception($"Failed to close the day: {response.ReasonPhrase}. Details: {responseContent}");
-        }
+        return null;
     }
 
-    public async Task SendSoftwareVersionAsync(string softwareVersion)
+    public async Task<string> SendSoftwareVersionAsync(string softwareVersion)
     {
         if (string.IsNullOrWhiteSpace(softwareVersion)) throw new ArgumentException("Software version is required.", nameof(softwareVersion));
 
@@ -380,10 +394,7 @@ public class TranslinkPaymentService
 
         var responseContent = await response.Content.ReadAsStringAsync();
 
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new Exception($"Failed to send software version: {response.ReasonPhrase}. Details: {responseContent}");
-        }
+        return responseContent;
     }
 
     // Utility methods to generate STAN and RRN
@@ -430,18 +441,17 @@ public class EventData
     // Add other event-related properties
 }
 
-// Response models
-//public class AuthorizeResponse
-//{
-//    public string OperationId { get; set; }
-//    public string Status { get; set; }
-//    // Add other relevant properties based on the API response
-//}
-
 public class VoidResponse
 {
-    public string Status { get; set; }
-    // Add other relevant properties
+    [JsonPropertyName("eventName")]
+    public string EventName { get; set; }
+
+    [JsonPropertyName("properties")]
+    public Properties Properties { get; set; }
+
+    [JsonPropertyName("result")]
+    public Result Result { get; set; }
+    public PrintResult PrintResult { get; set; }
 }
 
 public class RefundResponse
