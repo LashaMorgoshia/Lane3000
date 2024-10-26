@@ -28,8 +28,8 @@ namespace Desk3500
                 await Auth();
 
                 // close day
-                await DayClose();
-                return;
+                //await DayClose();
+                //return;
 
                 // T01
                 await Purchase(9.99m);

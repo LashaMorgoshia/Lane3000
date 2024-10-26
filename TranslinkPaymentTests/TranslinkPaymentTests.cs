@@ -66,7 +66,9 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
     [Fact]
     public async Task Test02_ManualReversal()
     {
+        // O902927C42F6EE655
         // Act
+        _test01OperationId = "OBFE2EA5351A1D73A";
         await _paymentService.OpenPosAsync("licenseToken", _pos, "username", "password");
         var response = await _paymentService.VoidTransactionAsync(_test01OperationId);
         await _paymentService.LockDeviceAsync();

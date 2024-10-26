@@ -291,11 +291,6 @@ public class TranslinkPaymentService
         {
             var response = await _httpClient.PostAsync($"{_apiBaseUrl}/getEvent", new StringContent("{}", Encoding.UTF8, "application/json"));
             var result = await response.Content.ReadAsStringAsync();
-            if (result.Contains("\"eventName\":\"ONDISPLAYTEXT\""))
-            {
-
-            }
-
             if (result.Contains("\"eventName\":\"ONTRNSTATUS\""))
             {
                 transactionStatus = JsonConvert.DeserializeObject<VoidResponse>(result);
