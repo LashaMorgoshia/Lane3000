@@ -92,6 +92,38 @@ public class TranslinkPaymentService
         await WaitForCardEvent();
     }
 
+    public async Task UnlockDeviceWithNoOperationAsync(decimal amount, string currencyCode, string operatorId, string operatorName, string idleText = "Insert Card", string language = "GE", string ecrVersion = "BDX-BOG-v1.0")
+    {
+        var amountInCents = (int)Math.Round(amount * 100);
+
+        var requestData = new
+        {
+            header = new { command = "UNLOCKDEVICE" },
+            @params = new
+            {
+                posOperation = "NOOPERATION",
+                amount = amountInCents,
+                cashBackAmount = 0,
+                currencyCode,
+                idleText,
+                language,
+                ecrVersion,
+                operatorId,
+                operatorName,
+                //cardTechs = new[] { "EmvChip", "EmvContactless", "MagnetSwipe" },
+                //enabledTranSourceMedias = new[] { "EmvChip", "EmvContactless", "MagnetSwipe" },
+                silentCardRead = true
+            }
+        };
+
+        var json = JsonConvert.SerializeObject(requestData);
+
+        var response = await _httpClient.PostAsync($"{_apiBaseUrl}/executeposcmd", new StringContent(json, Encoding.UTF8, "application/json"));
+
+        var responseContent = await response.Content.ReadAsStringAsync();
+    }
+
+
     public async Task CloseDocAsync(string docNo)
     {
         var requestData = new
@@ -332,7 +364,7 @@ public class TranslinkPaymentService
         return null;
     }
 
-    public async Task<CloseDayResponse> CloseDayAsync(string operatorId, string operatorName)
+    public async Task<PrintResult> CloseDayAsync(string operatorId, string operatorName)
     {
         var requestData = new
         {
@@ -344,16 +376,18 @@ public class TranslinkPaymentService
             }
         };
 
-//        var requestJson = $@"
-//        {{
-//            ""header"": {{
-//                ""command"": ""CLOSEDAY""
-//            }},
-//            ""params"": {{
-//                ""operatorId"": ""{operatorId}"",
-//""operatorName"": ""{operatorName}""
-//            }}
-//        }}";
+        //        var requestJson = $@"
+        //        {{
+        //            ""header"": {{
+        //                ""command"": ""CLOSEDAY""
+        //            }},
+        //            ""params"": {{
+        //                ""operatorId"": ""{operatorId}"",
+        //""operatorName"": ""{operatorName}""
+        //            }}
+        //        }}";
+
+        var printResult = new PrintResult();
 
         var response = await _httpClient.PostAsync($"{_apiBaseUrl}/executeposcmd",
             new StringContent(JsonConvert.SerializeObject(requestData), Encoding.UTF8, "application/json"));
@@ -365,16 +399,23 @@ public class TranslinkPaymentService
             var closeDayResponse = JsonConvert.DeserializeObject<CloseDayResponse>(responseContent);
         }
 
-        //while (true)
-        //{
-        //    var trnStatus = await _httpClient.PostAsync($"{_apiBaseUrl}/getEvent", new StringContent("{}", Encoding.UTF8, "application/json"));
-        //    var result = await trnStatus.Content.ReadAsStringAsync();
-        //    if (result.Contains("\"eventName\":\"ONTRNSTATUS\""))
-        //    {
-        //        var respo = JsonConvert.DeserializeObject<CloseDayResponse>(result);
-        //        return respo;
-        //    }
-        //}
+        while (true)
+        {
+            var trnStatus = await _httpClient.PostAsync($"{_apiBaseUrl}/getEvent", new StringContent("{}", Encoding.UTF8, "application/json"));
+            var result = await trnStatus.Content.ReadAsStringAsync();
+            
+            if (result.Contains("\"eventName\":\"ONPRINT\""))
+            {
+                printResult = JsonConvert.DeserializeObject<PrintResult>(result);
+                return printResult;
+            }
+            break;
+            //if (result.Contains("\"eventName\":\"ONTRNSTATUS\""))
+            //{
+            //    var respo = JsonConvert.DeserializeObject<CloseDayResponse>(result);
+            //    return respo;
+            //}
+        }
         return null;
     }
 

@@ -66,10 +66,14 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
     [Fact]
     public async Task Test02_ManualReversal()
     {
+        // Arrange
+        decimal amount = 9.99m;
+
         // O902927C42F6EE655
         // Act
-        _test01OperationId = "OBFE2EA5351A1D73A";
+        _test01OperationId = "O258683F52C80B72C";
         await _paymentService.OpenPosAsync("licenseToken", _pos, "username", "password");
+        await _paymentService.UnlockDeviceWithNoOperationAsync(amount, _currCode, _operatorId, _operatorName);
         var response = await _paymentService.VoidTransactionAsync(_test01OperationId);
         await _paymentService.LockDeviceAsync();
         await _paymentService.ClosePosAsync();
@@ -91,7 +95,8 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
 
         await Assert.ThrowsAsync<Exception>(async () =>
         {
-            var response = await _paymentService.AuthorizeTransactionAsync(amount, _docNo, _currCode, _panL4Digit);
+            await _paymentService.AuthorizeTransactionAsync(amount, _docNo, _currCode, _panL4Digit);
+            var response = await _paymentService.WaitForAuthResponse();
             if (response.Properties.State == "Declined")
                 throw new Exception("Unexpected Exception");
         });
@@ -173,8 +178,8 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
         // Arrange
         decimal amount = 9.99m;
         _docNo = $"{DateTime.Now.Ticks}";
-        var stan = "183";
-        var rrn = "4282RR100183";
+        var stan = "217";
+        var rrn = "4304RR100217";
 
         // Console.WriteLine("Running Test T07 - Refund...");
         await _paymentService.OpenPosAsync("licenseToken", _pos, "username", "password");
@@ -232,7 +237,7 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
         Console.WriteLine("Running Test T10 - Send Software Version...");
         await _paymentService.OpenPosAsync("licenseToken", _pos, "username", "password");
         await _paymentService.UnlockDeviceAsync(0, _currCode, _operatorId, _operatorName);  // No amount needed
-        // var response = await _paymentService.SendSoftwareVersionAsync("BDX-BOG-v1.0");
+        var response = await _paymentService.SendSoftwareVersionAsync("BDX-BOG-v1.0");
         await _paymentService.LockDeviceAsync();
         await _paymentService.ClosePosAsync();
 
