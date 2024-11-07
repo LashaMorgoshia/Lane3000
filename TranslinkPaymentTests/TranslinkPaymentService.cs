@@ -168,28 +168,63 @@ public class TranslinkPaymentService
         await WaitForCardEvent();
     }
 
-    public async Task CloseDocAsync(string docNo)
+    public async Task CloseDocAsync(string operationId, string docNo)
     {
-        var requestData = new
+        var request = new
         {
-            header = new { command = "CLOSEDOC" },
+            header = new
+            {
+                command = "CLOSEDOC"
+            },
             @params = new
             {
-                idleText = "READY",
-                documentNr = docNo
+                operations = new string[] { operationId },  // Transaction identifiers to be confirmed
+                                                            //eProducts = new string[] { "A0000000041010", "A0000000041012" },  // E product transaction identifiers
+                                                            //fiscalOperations = new string[] { "A0000000041010", "A0000000041012" },  // Fiscal operations to be confirmed
+                documentNr = docNo  // Register receipt number
             }
         };
 
-        var response = await _httpClient.PostAsync($"{_apiBaseUrl}/executeposcmd",
-            new StringContent(JsonConvert.SerializeObject(requestData), Encoding.UTF8, "application/json"));
+        string jsonRequest = JsonConvert.SerializeObject(request);
+        StringContent content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
 
-        var responseContent = await response.Content.ReadAsStringAsync();
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            //throw new Exception($"Failed to lock device: {response.ReasonPhrase}. Details: {responseContent}");
+            HttpResponseMessage response = await _httpClient.PostAsync($"{_apiBaseUrl}/executeposcmd", content);
+            response.EnsureSuccessStatusCode();
+
+            string responseBody = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Close Document Operation Response: " + responseBody);
+        }
+        catch (HttpRequestException e)
+        {
+            Console.WriteLine("Request error: " + e.Message);
         }
     }
+
+    //public async Task CloseDocAsync(string operationId, string docNo)
+    //{
+    //    var requestData = new
+    //    {
+    //        header = new { command = "CLOSEDOC" },
+    //        @params = new
+    //        {
+    //            idleText = "READY",
+    //            operations = new string[] { operationId },
+    //            documentNr = docNo
+    //        }
+    //    };
+
+    //    var response = await _httpClient.PostAsync($"{_apiBaseUrl}/executeposcmd",
+    //        new StringContent(JsonConvert.SerializeObject(requestData), Encoding.UTF8, "application/json"));
+
+    //    var responseContent = await response.Content.ReadAsStringAsync();
+
+    //    if (!response.IsSuccessStatusCode)
+    //    {
+    //        //throw new Exception($"Failed to lock device: {response.ReasonPhrase}. Details: {responseContent}");
+    //    }
+    //}
 
     public async Task LockDeviceAsync()
     {
@@ -513,6 +548,26 @@ public class TranslinkPaymentService
         }
         return null;
     }
+
+    
+        public async Task PerformSoftwareVersionCheck()
+        {
+            string versionApiUrl = _apiBaseUrl + "/getsoftwareversions";
+
+            try
+            {
+                HttpResponseMessage response = await _httpClient.GetAsync(versionApiUrl);
+                response.EnsureSuccessStatusCode();
+
+                string responseBody = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Software Version Check Response: " + responseBody);
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine("Request error: " + e.Message);
+            }
+        }
+    
 
     public async Task<string> SendSoftwareVersionAsync(string softwareVersion)
     {

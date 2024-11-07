@@ -51,7 +51,7 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
         await _paymentService.UnlockDeviceAsync(amount, _currCode, _operatorId, _operatorName);
         await _paymentService.AuthorizeTransactionAsync(amount, _docNo, _currCode, _panL4Digit);
         var response = await _paymentService.WaitForAuthResponse();
-        await _paymentService.CloseDocAsync(_docNo);
+        await _paymentService.CloseDocAsync(response.Properties.OperationId, _docNo);
         await _paymentService.LockDeviceAsync();
         await _paymentService.ClosePosAsync();
 
@@ -71,7 +71,7 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
 
         // O902927C42F6EE655
         // Act
-        _test01OperationId = "O289F30F9006E0EAB";
+        _test01OperationId = "ODB64D36CCA226E18";
         await _paymentService.OpenPosAsync("licenseToken", _pos, "username", "password");
         await _paymentService.UnlockDeviceWithNoOperationAsync(amount, _currCode, _operatorId, _operatorName);
         var response = await _paymentService.VoidTransactionAsync(_test01OperationId);
@@ -118,7 +118,7 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
         await _paymentService.UnlockDeviceAsync(amount, _currCode, _operatorId, _operatorName); // Amount: 6.66 EUR
         var response = await _paymentService.AuthorizeTransactionAsync(amount, _docNo, _currCode, _panL4Digit);  // Expected: Reversed
         var authResult = await _paymentService.WaitForAuthResponse();
-        await _paymentService.CloseDocAsync(_docNo);
+        await _paymentService.CloseDocAsync(authResult.Properties.OperationId, _docNo);
         await _paymentService.LockDeviceAsync();
         await _paymentService.ClosePosAsync();
 
@@ -140,7 +140,7 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
         await _paymentService.UnlockDeviceAsync(amount, _currCode, _operatorId, _operatorName); // Amount: 6.70 EUR
         var response = await _paymentService.AuthorizeTransactionAsync(amount, _docNo, _currCode, _panL4Digit);  // Terminal will prompt for PIN
         var authResult = await _paymentService.WaitForAuthResponse();
-        await _paymentService.CloseDocAsync(_docNo);
+        await _paymentService.CloseDocAsync(authResult.Properties.OperationId, _docNo);
         await _paymentService.LockDeviceAsync();
         await _paymentService.ClosePosAsync();
 
@@ -162,7 +162,7 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
         await _paymentService.UnlockDeviceAsync(amount, _currCode, _operatorId, _operatorName); // Amount: 6.55 EUR
         await _paymentService.AuthorizeTransactionAsync(amount, _docNo, _currCode, _panL4Digit);  // Expected: Declined
         var response = await _paymentService.WaitForAuthResponse();
-        await _paymentService.CloseDocAsync(_docNo);
+        await _paymentService.CloseDocAsync(response.Properties.OperationId, _docNo);
         await _paymentService.LockDeviceAsync();
         await _paymentService.ClosePosAsync();
 
@@ -178,8 +178,8 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
         // Arrange
         decimal amount = 9.99m;
         _docNo = $"{DateTime.Now.Ticks}";
-        var stan = "237";
-        var rrn = "4312RR100237";
+        var stan = "246";
+        var rrn = "4312RR100246";
 
         // Console.WriteLine("Running Test T07 - Refund...");
         await _paymentService.OpenPosAsync("licenseToken", _pos, "username", "password");
@@ -189,7 +189,7 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
         if (auth != null)
         {
             response = await _paymentService.WaitForAuthResponse();
-            await _paymentService.CloseDocAsync(_docNo);
+            await _paymentService.CloseDocAsync(response.Properties.OperationId, _docNo);
         }
         await _paymentService.LockDeviceAsync();
         await _paymentService.ClosePosAsync();
@@ -239,6 +239,8 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
     [Fact]
     public async Task Test10_SendSoftwareVersion()
     {
+        await _paymentService.PerformSoftwareVersionCheck();
+
         Console.WriteLine("Running Test T10 - Send Software Version...");
         await _paymentService.OpenPosAsync("licenseToken", _pos, "username", "password");
         await _paymentService.UnlockDeviceAsync(0, _currCode, _operatorId, _operatorName);  // No amount needed
