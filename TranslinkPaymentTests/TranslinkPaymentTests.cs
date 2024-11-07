@@ -71,7 +71,7 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
 
         // O902927C42F6EE655
         // Act
-        _test01OperationId = "O258683F52C80B72C";
+        _test01OperationId = "O289F30F9006E0EAB";
         await _paymentService.OpenPosAsync("licenseToken", _pos, "username", "password");
         await _paymentService.UnlockDeviceWithNoOperationAsync(amount, _currCode, _operatorId, _operatorName);
         var response = await _paymentService.VoidTransactionAsync(_test01OperationId);
@@ -178,14 +178,19 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
         // Arrange
         decimal amount = 9.99m;
         _docNo = $"{DateTime.Now.Ticks}";
-        var stan = "217";
-        var rrn = "4304RR100217";
+        var stan = "237";
+        var rrn = "4312RR100237";
 
         // Console.WriteLine("Running Test T07 - Refund...");
         await _paymentService.OpenPosAsync("licenseToken", _pos, "username", "password");
-        await _paymentService.RefundTransactionAsync(stan, rrn, amount, _docNo, _currCode, _panL4Digit);  // Amount: 9.99 EUR
-        var response = await _paymentService.WaitForAuthResponse();
-        await _paymentService.CloseDocAsync(_docNo);
+        await _paymentService.UnlockDeviceForCreditAsync(amount, _currCode, _operatorId, _operatorName); // Amount: 9.99 EUR
+        var auth = await _paymentService.RefundTransactionAsync(stan, rrn, amount, _docNo, _currCode, _panL4Digit);  // Amount: 9.99 EUR
+        var response = default(AuthorizeResponse);
+        if (auth != null)
+        {
+            response = await _paymentService.WaitForAuthResponse();
+            await _paymentService.CloseDocAsync(_docNo);
+        }
         await _paymentService.LockDeviceAsync();
         await _paymentService.ClosePosAsync();
 

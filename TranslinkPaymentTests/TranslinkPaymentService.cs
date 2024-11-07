@@ -123,6 +123,50 @@ public class TranslinkPaymentService
         var responseContent = await response.Content.ReadAsStringAsync();
     }
 
+    public async Task UnlockDeviceForCreditAsync(decimal amount, string currencyCode, string operatorId, string operatorName, string idleText = "Insert Card", string language = "GE", string ecrVersion = "BDX-BOG-v1.0")
+    {
+        var amountInCents = (int)Math.Round(amount * 100);
+
+        var requestData = new
+        {
+            header = new { command = "UNLOCKDEVICE" },
+            @params = new
+            {
+                posOperation = "CREDIT",
+                amount = amountInCents,
+                cashBackAmount = 0,
+                currencyCode,
+                idleText,
+                language,
+                ecrVersion,
+                operatorId,
+                operatorName,
+                //cardTechs = new[] { "EmvChip", "EmvContactless", "MagnetSwipe" },
+                //enabledTranSourceMedias = new[] { "EmvChip", "EmvContactless", "MagnetSwipe" },
+                silentCardRead = true
+            }
+        };
+
+        var json = JsonConvert.SerializeObject(requestData);
+
+        var response = await _httpClient.PostAsync($"{_apiBaseUrl}/executeposcmd", new StringContent(json, Encoding.UTF8, "application/json"));
+
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        //if (!response.IsSuccessStatusCode)
+        //{
+        //    throw new Exception($"Failed to unlock device: {response.ReasonPhrase}. Details: {responseContent}");
+        //}
+
+        //// Parse the response to get the operationId
+        //var unlockResponse = JsonConvert.DeserializeObject<UnlockResponse>(responseContent);
+        //string operationId = unlockResponse.OperationId;
+
+        //// Wait for the ONCARD event
+        //await WaitForEventAsync("ONCARD", operationId, TimeSpan.FromSeconds(5));
+
+        await WaitForCardEvent();
+    }
 
     public async Task CloseDocAsync(string docNo)
     {
@@ -246,6 +290,57 @@ public class TranslinkPaymentService
         return null;
     }
 
+    public async Task<AuthorizeResponse> RefundTransactionAsync(string stan, string rrn, decimal amount, string documentNr, string currencyCode, string panL4Digit)
+    {
+        var amountInCents = (int)Math.Round(amount * 100);
+
+        //var requestData = new
+        //{
+        //    header = new { command = "CREDIT" },
+        //    @params = new
+        //    {
+        //        amount = amountInCents,
+        //        currencyCode,
+        //        documentNr,
+        //        panL4Digit,
+        //        stan,
+        //        rrn
+        //    }
+        //};
+
+        var requestData = new
+        {
+            header = new
+            {
+                command = "CREDIT"
+            },
+            @params = new
+                   {
+                       amount = amountInCents,  // Transaction amount in cents
+                       currencyCode = currencyCode,  // Transaction currency code, e.g., "643" for Russian Ruble
+                       documentNr = documentNr,  // Unique payment document number
+                       panL4Digit = panL4Digit,  // Last 4 digits of the card number
+                       time = DateTime.Now.ToString("yyyyMMddHHmmss"),
+                       STAN = stan,  // System Trace Audit Number
+                       RRN = rrn,  // Retrieval Reference Number
+                       //ecrData = "Optional additional data"
+                   }
+        };
+
+        var response = await _httpClient.PostAsync($"{_apiBaseUrl}/executeposcmd",
+            new StringContent(JsonConvert.SerializeObject(requestData), Encoding.UTF8, "application/json"));
+
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        if (response.IsSuccessStatusCode && !responseContent.Contains("INVALID_ARG"))
+        {
+            var authorizeResponse = JsonConvert.DeserializeObject<AuthorizeResponse>(responseContent);
+            return authorizeResponse;
+        }
+
+        return null;
+    }
+
     public async Task<AuthorizeResponse> AuthorizeThrowAsync(decimal amount, string documentNr, string currencyCode, string panL4Digit)
     {
         var amountInCents = (int)Math.Round(amount * 100);
@@ -331,38 +426,38 @@ public class TranslinkPaymentService
         }
     }
 
-    public async Task<RefundResponse> RefundTransactionAsync(string stan, string rrn, decimal amount, string documentNr, string currencyCode, string panL4Digit)
-    {
-        var amountInCents = (int)Math.Round(amount * 100);
+    //public async Task<RefundResponse> RefundTransactionAsync(string stan, string rrn, decimal amount, string documentNr, string currencyCode, string panL4Digit)
+    //{
+    //    var amountInCents = (int)Math.Round(amount * 100);
 
-        var requestData = new
-        {
-            header = new { command = "CREDIT" },
-            @params = new
-            {
-                amount = amountInCents,
-                currencyCode,
-                documentNr,
-                panL4Digit,
-                time = DateTime.UtcNow.ToString("yyyyMMddHHmmss"),
-                // STAN and RRN should be generated or retrieved appropriately
-                STAN = stan,
-                RRN = rrn
-            }
-        };
+    //    var requestData = new
+    //    {
+    //        header = new { command = "CREDIT" },
+    //        @params = new
+    //        {
+    //            amount = amountInCents,
+    //            currencyCode,
+    //            documentNr,
+    //            panL4Digit,
+    //            time = DateTime.UtcNow.ToString("yyyyMMddHHmmss"),
+    //            // STAN and RRN should be generated or retrieved appropriately
+    //            STAN = stan,
+    //            RRN = rrn
+    //        }
+    //    };
 
-        var response = await _httpClient.PostAsync($"{_apiBaseUrl}/executeposcmd",
-            new StringContent(JsonConvert.SerializeObject(requestData), Encoding.UTF8, "application/json"));
+    //    var response = await _httpClient.PostAsync($"{_apiBaseUrl}/executeposcmd",
+    //        new StringContent(JsonConvert.SerializeObject(requestData), Encoding.UTF8, "application/json"));
 
-        var responseContent = await response.Content.ReadAsStringAsync();
+    //    var responseContent = await response.Content.ReadAsStringAsync();
 
-        if (response.IsSuccessStatusCode)
-        {
-            var refundResponse = JsonConvert.DeserializeObject<RefundResponse>(responseContent);
-            return refundResponse;
-        }
-        return null;
-    }
+    //    if (response.IsSuccessStatusCode)
+    //    {
+    //        var refundResponse = JsonConvert.DeserializeObject<RefundResponse>(responseContent);
+    //        return refundResponse;
+    //    }
+    //    return null;
+    //}
 
     public async Task<PrintResult> CloseDayAsync(string operatorId, string operatorName)
     {
