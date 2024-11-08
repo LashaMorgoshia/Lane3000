@@ -329,20 +329,6 @@ public class TranslinkPaymentService
     {
         var amountInCents = (int)Math.Round(amount * 100);
 
-        //var requestData = new
-        //{
-        //    header = new { command = "CREDIT" },
-        //    @params = new
-        //    {
-        //        amount = amountInCents,
-        //        currencyCode,
-        //        documentNr,
-        //        panL4Digit,
-        //        stan,
-        //        rrn
-        //    }
-        //};
-
         var requestData = new
         {
             header = new
@@ -461,39 +447,6 @@ public class TranslinkPaymentService
         }
     }
 
-    //public async Task<RefundResponse> RefundTransactionAsync(string stan, string rrn, decimal amount, string documentNr, string currencyCode, string panL4Digit)
-    //{
-    //    var amountInCents = (int)Math.Round(amount * 100);
-
-    //    var requestData = new
-    //    {
-    //        header = new { command = "CREDIT" },
-    //        @params = new
-    //        {
-    //            amount = amountInCents,
-    //            currencyCode,
-    //            documentNr,
-    //            panL4Digit,
-    //            time = DateTime.UtcNow.ToString("yyyyMMddHHmmss"),
-    //            // STAN and RRN should be generated or retrieved appropriately
-    //            STAN = stan,
-    //            RRN = rrn
-    //        }
-    //    };
-
-    //    var response = await _httpClient.PostAsync($"{_apiBaseUrl}/executeposcmd",
-    //        new StringContent(JsonConvert.SerializeObject(requestData), Encoding.UTF8, "application/json"));
-
-    //    var responseContent = await response.Content.ReadAsStringAsync();
-
-    //    if (response.IsSuccessStatusCode)
-    //    {
-    //        var refundResponse = JsonConvert.DeserializeObject<RefundResponse>(responseContent);
-    //        return refundResponse;
-    //    }
-    //    return null;
-    //}
-
     public async Task<PrintResult> CloseDayAsync(string operatorId, string operatorName)
     {
         var requestData = new
@@ -505,17 +458,6 @@ public class TranslinkPaymentService
                 operatorName = operatorName
             }
         };
-
-        //        var requestJson = $@"
-        //        {{
-        //            ""header"": {{
-        //                ""command"": ""CLOSEDAY""
-        //            }},
-        //            ""params"": {{
-        //                ""operatorId"": ""{operatorId}"",
-        //""operatorName"": ""{operatorName}""
-        //            }}
-        //        }}";
 
         var printResult = new PrintResult();
 
@@ -540,11 +482,6 @@ public class TranslinkPaymentService
                 return printResult;
             }
             break;
-            //if (result.Contains("\"eventName\":\"ONTRNSTATUS\""))
-            //{
-            //    var respo = JsonConvert.DeserializeObject<CloseDayResponse>(result);
-            //    return respo;
-            //}
         }
         return null;
     }
