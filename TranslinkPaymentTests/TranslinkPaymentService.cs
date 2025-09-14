@@ -259,6 +259,11 @@ public class TranslinkPaymentService
                 Console.WriteLine("Event Response: " + result);
                 Console.WriteLine();
             }
+            if (result.Contains("ONKBD") && result.Contains("kbdKey") && result.Contains("FR") && result.Contains("OK"))
+            {
+                Console.WriteLine("Event Response: " + result);
+                break;
+            }
 
             if (result.Contains("\"eventName\":\"ONCARD\""))
             {
@@ -295,6 +300,37 @@ public class TranslinkPaymentService
     }
 
     public async Task<AuthorizeResponse> AuthorizeTransactionAsync(decimal amount, string documentNr, string currencyCode, string panL4Digit)
+    {
+        var amountInCents = (int)Math.Round(amount * 100);
+
+        var requestData = new
+        {
+            header = new { command = "AUTHORIZE" },
+            @params = new
+            {
+                amount = amountInCents,
+                cashBackAmount = 0,
+                currencyCode,
+                documentNr,
+                panL4Digit
+            }
+        };
+
+        var response = await _httpClient.PostAsync($"{_apiBaseUrl}/executeposcmd",
+            new StringContent(JsonConvert.SerializeObject(requestData), Encoding.UTF8, "application/json"));
+
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        if (response.IsSuccessStatusCode)
+        {
+            var authorizeResponse = JsonConvert.DeserializeObject<AuthorizeResponse>(responseContent);
+            return authorizeResponse;
+        }
+
+        return null;
+    }
+
+    public async Task<AuthorizeResponse> AuthorizeTransactionDeclaneAsync(decimal amount, string documentNr, string currencyCode, string panL4Digit)
     {
         var amountInCents = (int)Math.Round(amount * 100);
 
@@ -471,19 +507,20 @@ public class TranslinkPaymentService
             var closeDayResponse = JsonConvert.DeserializeObject<CloseDayResponse>(responseContent);
         }
 
+        var result = "";
         while (true)
         {
             var trnStatus = await _httpClient.PostAsync($"{_apiBaseUrl}/getEvent", new StringContent("{}", Encoding.UTF8, "application/json"));
-            var result = await trnStatus.Content.ReadAsStringAsync();
+            result = await trnStatus.Content.ReadAsStringAsync();
             
             if (result.Contains("\"eventName\":\"ONPRINT\""))
             {
                 printResult = JsonConvert.DeserializeObject<PrintResult>(result);
                 return printResult;
             }
-            break;
+            //break;
         }
-        return null;
+        return new PrintResult();
     }
 
     
