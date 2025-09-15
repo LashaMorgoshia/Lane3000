@@ -1,8 +1,9 @@
-using static TranslinkPaymentTests;
+using static TranslinkPaymentTestsV1;
 
-public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixture>
+public class TranslinkPaymentTestsV1 : IClassFixture<TranslinkPaymentServiceFixture>
 {
-    private readonly TranslinkPaymentService _paymentService;
+    //private readonly TranslinkPaymentServiceV1 _paymentService;
+    private readonly TranslinkPaymentServiceV2 _paymentService;
 
     // Store operation IDs from transactions for use in subsequent tests
     private string _test01OperationId;
@@ -18,7 +19,7 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
     private string _stan { get; set; }
     private string _rrn { get; set; }
 
-    public TranslinkPaymentTests(TranslinkPaymentServiceFixture fixture)
+    public TranslinkPaymentTestsV1(TranslinkPaymentServiceFixture fixture)
     {
         _paymentService = fixture.PaymentService;
     }
@@ -261,13 +262,13 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
     // Fixture to initialize the payment service
     public class TranslinkPaymentServiceFixture
     {
-        public TranslinkPaymentService PaymentService { get; private set; }
+        public TranslinkPaymentServiceV2 PaymentService { get; private set; }
 
         public TranslinkPaymentServiceFixture()
         {
             var httpClient = new HttpClient();
             string apiBaseUrl = "http://localhost:6678/v105"; // Or retrieve from config
-            PaymentService = new TranslinkPaymentService(httpClient, apiBaseUrl);
+            PaymentService = new TranslinkPaymentServiceV2(httpClient, apiBaseUrl);
         }
     }
 }

@@ -5,13 +5,13 @@ using System.Reflection.Metadata;
 using System.Text;
 using System.Text.Json.Serialization;
 
-public class TranslinkPaymentService
+public class TranslinkPaymentServiceV1
 {
     private readonly HttpClient _httpClient;
     private readonly string _apiBaseUrl;
     private string _accessToken;
 
-    public TranslinkPaymentService(HttpClient httpClient, string apiBaseUrl)
+    public TranslinkPaymentServiceV1(HttpClient httpClient, string apiBaseUrl)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _apiBaseUrl = apiBaseUrl ?? throw new ArgumentNullException(nameof(apiBaseUrl));
@@ -581,172 +581,172 @@ public class TranslinkPaymentService
 }
 
 // Response models
-public class UnlockResponse
-{
-    [JsonProperty("operationId")]
-    public string OperationId { get; set; }
-    // Add other relevant properties
-}
+//public class UnlockResponse
+//{
+//    [JsonProperty("operationId")]
+//    public string OperationId { get; set; }
+//    // Add other relevant properties
+//}
 
-public class StatusResponse
-{
-    [JsonProperty("status")]
-    public string Status { get; set; }
+//public class StatusResponse
+//{
+//    [JsonProperty("status")]
+//    public string Status { get; set; }
 
-    [JsonProperty("events")]
-    public EventData[] Events { get; set; }
+//    [JsonProperty("events")]
+//    public EventData[] Events { get; set; }
 
-    [JsonProperty("errorMessage")]
-    public string ErrorMessage { get; set; }
+//    [JsonProperty("errorMessage")]
+//    public string ErrorMessage { get; set; }
 
-    // Add other relevant properties
-}
+//    // Add other relevant properties
+//}
 
-public class EventData
-{
-    [JsonProperty("eventName")]
-    public string EventName { get; set; }
+//public class EventData
+//{
+//    [JsonProperty("eventName")]
+//    public string EventName { get; set; }
 
-    // Add other event-related properties
-}
+//    // Add other event-related properties
+//}
 
-public class VoidResponse
-{
-    [JsonPropertyName("eventName")]
-    public string EventName { get; set; }
+//public class VoidResponse
+//{
+//    [JsonPropertyName("eventName")]
+//    public string EventName { get; set; }
 
-    [JsonPropertyName("properties")]
-    public Properties Properties { get; set; }
+//    [JsonPropertyName("properties")]
+//    public Properties Properties { get; set; }
 
-    [JsonPropertyName("result")]
-    public Result Result { get; set; }
-    public PrintResult PrintResult { get; set; }
-}
+//    [JsonPropertyName("result")]
+//    public Result Result { get; set; }
+//    public PrintResult PrintResult { get; set; }
+//}
 
-public class RefundResponse
-{
-    [JsonPropertyName("eventName")]
-    public string EventName { get; set; }
+//public class RefundResponse
+//{
+//    [JsonPropertyName("eventName")]
+//    public string EventName { get; set; }
 
-    [JsonPropertyName("properties")]
-    public Properties Properties { get; set; }
+//    [JsonPropertyName("properties")]
+//    public Properties Properties { get; set; }
 
-    [JsonPropertyName("result")]
-    public Result Result { get; set; }
-    public PrintResult PrintResult { get; set; }
-}
+//    [JsonPropertyName("result")]
+//    public Result Result { get; set; }
+//    public PrintResult PrintResult { get; set; }
+//}
 
-public class CloseDayResponse
-{
-    [JsonPropertyName("eventName")]
-    public string EventName { get; set; }
+//public class CloseDayResponse
+//{
+//    [JsonPropertyName("eventName")]
+//    public string EventName { get; set; }
 
-    [JsonPropertyName("properties")]
-    public Properties Properties { get; set; }
+//    [JsonPropertyName("properties")]
+//    public Properties Properties { get; set; }
 
-    [JsonPropertyName("result")]
-    public Result Result { get; set; }
-    public PrintResult PrintResult { get; set; }
-}
+//    [JsonPropertyName("result")]
+//    public Result Result { get; set; }
+//    public PrintResult PrintResult { get; set; }
+//}
 
-public class AuthorizeResponse
-{
-    [JsonPropertyName("eventName")]
-    public string EventName { get; set; }
+//public class AuthorizeResponse
+//{
+//    [JsonPropertyName("eventName")]
+//    public string EventName { get; set; }
 
-    [JsonPropertyName("properties")]
-    public Properties Properties { get; set; }
+//    [JsonPropertyName("properties")]
+//    public Properties Properties { get; set; }
 
-    [JsonPropertyName("result")]
-    public Result Result { get; set; }
-    public PrintResult PrintResult { get; set; }
-}
+//    [JsonPropertyName("result")]
+//    public Result Result { get; set; }
+//    public PrintResult PrintResult { get; set; }
+//}
 
-public class Properties
-{
-    [JsonPropertyName("operationId")]
-    public string OperationId { get; set; }
+//public class Properties
+//{
+//    [JsonPropertyName("operationId")]
+//    public string OperationId { get; set; }
 
-    [JsonPropertyName("amountAuthorized")]
-    public decimal AmountAuthorized { get; set; }
+//    [JsonPropertyName("amountAuthorized")]
+//    public decimal AmountAuthorized { get; set; }
 
-    [JsonPropertyName("documentNr")]
-    public string DocumentNr { get; set; }
+//    [JsonPropertyName("documentNr")]
+//    public string DocumentNr { get; set; }
 
-    [JsonPropertyName("cryptogram")]
-    public string Cryptogram { get; set; }
+//    [JsonPropertyName("cryptogram")]
+//    public string Cryptogram { get; set; }
 
-    [JsonPropertyName("authCode")]
-    public string AuthCode { get; set; }
+//    [JsonPropertyName("authCode")]
+//    public string AuthCode { get; set; }
 
-    [JsonPropertyName("RRN")]
-    public string RRN { get; set; }
+//    [JsonPropertyName("RRN")]
+//    public string RRN { get; set; }
 
-    [JsonPropertyName("STAN")]
-    public string STAN { get; set; }
+//    [JsonPropertyName("STAN")]
+//    public string STAN { get; set; }
 
-    [JsonPropertyName("cardType")]
-    public string CardType { get; set; }
+//    [JsonPropertyName("cardType")]
+//    public string CardType { get; set; }
 
-    [JsonPropertyName("amountAdditional")]
-    public decimal? AmountAdditional { get; set; }
+//    [JsonPropertyName("amountAdditional")]
+//    public decimal? AmountAdditional { get; set; }
 
-    [JsonPropertyName("text")]
-    public string Text { get; set; }
+//    [JsonPropertyName("text")]
+//    public string Text { get; set; }
 
-    [JsonPropertyName("state")]
-    public string State { get; set; }
+//    [JsonPropertyName("state")]
+//    public string State { get; set; }
 
-    [JsonPropertyName("authorizationState")]
-    public string AuthorizationState { get; set; }
+//    [JsonPropertyName("authorizationState")]
+//    public string AuthorizationState { get; set; }
 
-    [JsonPropertyName("cardName")]
-    public string CardName { get; set; }
+//    [JsonPropertyName("cardName")]
+//    public string CardName { get; set; }
 
-    [JsonPropertyName("APN")]
-    public string APN { get; set; }
+//    [JsonPropertyName("APN")]
+//    public string APN { get; set; }
 
-    [JsonPropertyName("AID")]
-    public string AID { get; set; }
+//    [JsonPropertyName("AID")]
+//    public string AID { get; set; }
 
-    [JsonPropertyName("CVMApplied")]
-    public List<string> CVMApplied { get; set; }
+//    [JsonPropertyName("CVMApplied")]
+//    public List<string> CVMApplied { get; set; }
 
-    [JsonPropertyName("authCenterName")]
-    public string AuthCenterName { get; set; }
+//    [JsonPropertyName("authCenterName")]
+//    public string AuthCenterName { get; set; }
 
-    [JsonPropertyName("tranSourceMedia")]
-    public string TranSourceMedia { get; set; }
+//    [JsonPropertyName("tranSourceMedia")]
+//    public string TranSourceMedia { get; set; }
 
-    [JsonPropertyName("PAN")]
-    public string PAN { get; set; }
+//    [JsonPropertyName("PAN")]
+//    public string PAN { get; set; }
 
-    [JsonPropertyName("DCCResult")]
-    public string DCCResult { get; set; }
+//    [JsonPropertyName("DCCResult")]
+//    public string DCCResult { get; set; }
 
-    [JsonPropertyName("EcrData")]
-    public string EcrData { get; set; }
-}
+//    [JsonPropertyName("EcrData")]
+//    public string EcrData { get; set; }
+//}
 
-public class Result
-{
-    [JsonPropertyName("resultCode")]
-    public string ResultCode { get; set; }
+//public class Result
+//{
+//    [JsonPropertyName("resultCode")]
+//    public string ResultCode { get; set; }
 
-    [JsonPropertyName("resultMessage")]
-    public string ResultMessage { get; set; }
+//    [JsonPropertyName("resultMessage")]
+//    public string ResultMessage { get; set; }
 
-    [JsonPropertyName("resultTime")]
-    public string ResultTime { get; set; }
-}
+//    [JsonPropertyName("resultTime")]
+//    public string ResultTime { get; set; }
+//}
 
-public class PrintResult
-{
-    public PrintProperties Properties { get; set; }
-}
+//public class PrintResult
+//{
+//    public PrintProperties Properties { get; set; }
+//}
 
-public class PrintProperties
-{
-    public string ReceiptText { get; set; }
-    public string DocumentNr { get; set; }
-}
+//public class PrintProperties
+//{
+//    public string ReceiptText { get; set; }
+//    public string DocumentNr { get; set; }
+//}
