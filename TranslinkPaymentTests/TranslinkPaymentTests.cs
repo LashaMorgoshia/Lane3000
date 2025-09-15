@@ -40,6 +40,10 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
         Assert.True(true);
     }
 
+    /// <summary>
+    /// first of all, before day start,it should be closed previous day. than start payments
+    /// </summary>
+    /// <returns></returns>
     [Fact]
     public async Task Test01_Purchase()
     {
@@ -71,7 +75,7 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
 
         // O902927C42F6EE655
         // Act
-        _test01OperationId = "OA118F79962522943";
+        _test01OperationId = "O47E52B2625AF8D00";
         await _paymentService.OpenPosAsync("licenseToken", _pos, "username", "password");
         await _paymentService.UnlockDeviceWithNoOperationAsync(amount, _currCode, _operatorId, _operatorName);
         var response = await _paymentService.VoidTransactionAsync(_test01OperationId);
@@ -182,8 +186,8 @@ public class TranslinkPaymentTests : IClassFixture<TranslinkPaymentServiceFixtur
         // Arrange
         decimal amount = 9.99m;
         _docNo = $"{DateTime.Now.Ticks}";
-        var stan = "21";
-        var rrn = "5257RR100021";
+        var stan = "28";
+        var rrn = "5258RR100028";
 
         // Console.WriteLine("Running Test T07 - Refund...");
         await _paymentService.OpenPosAsync("licenseToken", _pos, "username", "password");
