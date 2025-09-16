@@ -201,7 +201,8 @@ public class TranslinkPaymentServiceV2
             ["amount"] = amountInCents,
             ["currencyCode"] = currencyCode,
             ["documentNr"] = documentNr,
-            ["panL4Digit"] = panL4Digit
+            ["panL4Digit"] = panL4Digit,
+            ["RRN"] = rrn
         };
 
         if (requireOriginalData)

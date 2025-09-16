@@ -90,9 +90,9 @@ public class TranslinkPaymentTestsV2 : IClassFixture<TranslinkPaymentTestsV2.Tra
         decimal amount = 9.99m;
         //_docNo = $"{DateTime.Now.Ticks}";
         //var stan = "28";
-        _docNo = "O88220CFF18D794AE";
+        //_docNo = "O1145EE77837610F4";
         //_stan = "50";
-        _rrn = "5258RR100058";
+        //_rrn = "5259RR100060";
 
         // Console.WriteLine("Running Test T07 - Refund...");
         await _paymentService.OpenPosAsync("licenseToken", _pos, "username", "password");
@@ -293,6 +293,7 @@ public class TranslinkPaymentTestsV2 : IClassFixture<TranslinkPaymentTestsV2.Tra
 
     /// <summary>
     /// T09: End of Day (successful)
+    /// დღის დახურვისთვის ყველა დოკუმენტი დახურული უნდა იყოს რაზეც ავტორიზაცია გაკეთდა
     /// </summary>
     [Fact]
     public async Task Test09_EndOfDay()
